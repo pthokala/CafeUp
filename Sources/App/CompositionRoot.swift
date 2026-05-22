@@ -27,6 +27,7 @@ enum CompositionRoot {
             logger: OSAppLogger(category: "triggers")
         )
         triggerEngine.start()
+        AppIntentBridge.shared.register(sessionEngine: sessionEngine)
 
         return AppDependencies(
             menuBarViewModel: MenuBarViewModel(

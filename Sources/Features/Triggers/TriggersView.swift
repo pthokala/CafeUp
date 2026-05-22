@@ -82,6 +82,22 @@ private struct TriggerEditorSheet: View {
     }
 }
 
+extension TriggerCondition {
+    var summaryLabel: String {
+        switch self {
+        case .appRunning(let id):
+            return "App: \(id)"
+        case .schedule(let weekdays, let range):
+            let days = weekdays.sorted { $0.rawValue < $1.rawValue }.map(\.shortName).joined(separator: ",")
+            return "\(days) \(range.start.formatted)–\(range.end.formatted)"
+        case .onACPower:
+            return "AC power"
+        case .batteryAtLeast(let percent):
+            return "Battery ≥ \(percent)%"
+        }
+    }
+}
+
 private struct TriggerRow: View {
     let trigger: Trigger
     let isActive: Bool
