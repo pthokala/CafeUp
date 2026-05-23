@@ -7,13 +7,18 @@ options:
 
 settings:
   base:
-    MARKETING_VERSION: "0.1.0"
-    CURRENT_PROJECT_VERSION: "1"
+    MARKETING_VERSION: "0.2.0"
+    CURRENT_PROJECT_VERSION: "2"
     SWIFT_VERSION: "5.9"
     SWIFT_STRICT_CONCURRENCY: complete
     DEVELOPMENT_TEAM: ""
     CODE_SIGN_STYLE: Automatic
     CODE_SIGN_IDENTITY: "-"
+
+packages:
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    from: "2.9.0"
 
 targets:
   CafeUp:
@@ -23,6 +28,8 @@ targets:
       - path: Sources
         excludes:
           - "Resources/CafeUp.entitlements"
+    dependencies:
+      - package: Sparkle
     info:
       path: Sources/Resources/Info.plist
       properties:
@@ -33,6 +40,10 @@ targets:
         LSMinimumSystemVersion: $(MACOSX_DEPLOYMENT_TARGET)
         LSUIElement: true
         NSHumanReadableCopyright: "Copyright © 2026 Pardhu. All rights reserved."
+        SUFeedURL: "https://pthokala.github.io/CafeUp/appcast.xml"
+        SUPublicEDKey: "OAE6wYuiNNZdDgvz4bl+mpQPYZc4nJvXPy08RmB2WwU="
+        SUEnableAutomaticChecks: false
+        SUAllowsAutomaticUpdates: false
     entitlements:
       path: Sources/Resources/CafeUp.entitlements
       properties:

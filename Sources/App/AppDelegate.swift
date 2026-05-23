@@ -18,6 +18,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusController = StatusBarController(
             viewModel: deps.menuBarViewModel,
             appearanceViewModel: deps.appearanceViewModel,
+            updaterService: deps.updaterService,
             pickApplication: { [deps] in deps.appPicker.pickApplication() },
             openSettings: { [weak self] in self?.openAndActivate(WindowID.settings) },
             openCustomDuration: { [weak self] in self?.openAndActivate(WindowID.customDuration) },

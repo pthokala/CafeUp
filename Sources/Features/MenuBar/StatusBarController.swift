@@ -1,5 +1,4 @@
 import AppKit
-import SwiftUI
 import Observation
 
 /// Owns the `NSStatusItem` for CafeUp's menu bar icon, rebuilds the dropdown menu
@@ -10,16 +9,16 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     private let statusItem: NSStatusItem
     private let viewModel: MenuBarViewModel
     private let appearanceViewModel: AppearanceViewModel
+    private let updaterService: UpdaterService
     private let pickApplication: () -> PickedApplication?
     private let openSettings: () -> Void
     private let openCustomDuration: () -> Void
     private let openEndAtTime: () -> Void
 
-    private var iconHost: NSHostingView<MenuBarIcon>?
-
     init(
         viewModel: MenuBarViewModel,
         appearanceViewModel: AppearanceViewModel,
+        updaterService: UpdaterService,
         pickApplication: @escaping () -> PickedApplication?,
         openSettings: @escaping () -> Void,
         openCustomDuration: @escaping () -> Void,
@@ -27,6 +26,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     ) {
         self.viewModel = viewModel
         self.appearanceViewModel = appearanceViewModel
+        self.updaterService = updaterService
         self.pickApplication = pickApplication
         self.openSettings = openSettings
         self.openCustomDuration = openCustomDuration
@@ -42,26 +42,22 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
     // MARK: - Icon
 
+    /// Assigning a template `NSImage` to `statusItem.button?.image` is what makes
+    /// macOS handle the click-state highlight correctly (inverting the icon against
+    /// the selection background). A previous version of this controller embedded
+    /// an `NSHostingView<MenuBarIcon>` as a button subview, which caused filled
+    /// symbols to render as solid dark blobs on the highlight.
     private func installIcon() {
         guard let button = statusItem.button else { return }
-        let host = NSHostingView(rootView: MenuBarIcon(
-            style: appearanceViewModel.iconStyle,
+        button.image = MenuBarIconImage.template(
+            for: appearanceViewModel.iconStyle,
             isActive: viewModel.isActive
-        ))
-        host.translatesAutoresizingMaskIntoConstraints = false
-        button.addSubview(host)
-        NSLayoutConstraint.activate([
-            host.centerXAnchor.constraint(equalTo: button.centerXAnchor),
-            host.centerYAnchor.constraint(equalTo: button.centerYAnchor),
-            host.widthAnchor.constraint(equalToConstant: 22),
-            host.heightAnchor.constraint(equalToConstant: 22),
-        ])
-        self.iconHost = host
+        )
+        button.imagePosition = .imageOnly
     }
 
-    /// Reinstall the icon SwiftUI root whenever `isActive` or `iconStyle` changes.
-    /// Uses `withObservationTracking` to receive a single callback per change, then
-    /// re-registers — the standard Observation re-arming pattern.
+    /// Re-render the template image whenever `isActive` or `iconStyle` changes.
+    /// `withObservationTracking` fires once per change; we re-register at the end.
     private func observeIconState() {
         withObservationTracking {
             _ = viewModel.isActive
@@ -75,8 +71,8 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     }
 
     private func refreshIcon() {
-        iconHost?.rootView = MenuBarIcon(
-            style: appearanceViewModel.iconStyle,
+        statusItem.button?.image = MenuBarIconImage.template(
+            for: appearanceViewModel.iconStyle,
             isActive: viewModel.isActive
         )
     }
@@ -98,6 +94,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
             menu.removeAllItems()
             let builder = StatusBarMenuBuilder(
                 viewModel: viewModel,
+                updaterService: updaterService,
                 pickApplication: pickApplication,
                 openSettings: openSettings,
                 openCustomDuration: openCustomDuration,

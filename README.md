@@ -35,8 +35,15 @@ Triggers combine with AND semantics; multiple active triggers use the strictest 
 ### Appearance
 13 menu-bar icon styles (Coffee Cup, Steaming Cup, Mug, Takeout Cup, Coffee Bean, Divided Disc, Divided Circle, Dot, Circle, Pill, Bolt, Eye, Sun). Active and idle variants render distinctly.
 
+### Updates
+CafeUp does **not** check for updates automatically. To check, either:
+- Click **Check for Updates…** in the menu bar (under *About CafeUp*), or
+- Open **Settings → General → Updates** and click *Check for Updates Now*.
+
+If a new version is available, [Sparkle](https://sparkle-project.org) downloads it, verifies its EdDSA signature + Apple Developer ID, and installs it on relaunch. The current version is shown in **About CafeUp** and in the Updates section.
+
 ### Settings window (⌘,)
-Three tabs: **General** (default wake behavior), **Triggers** (CRUD), **Appearance** (icon picker).
+Three tabs: **General** (default wake behavior + updates), **Triggers** (CRUD), **Appearance** (icon picker).
 
 ---
 
@@ -120,6 +127,19 @@ Tests/            ~180 unit tests + fakes for every protocol service
 ```
 
 ---
+
+## Releasing (maintainers)
+
+Releases are EdDSA-signed and notarized; users get them via Sparkle.
+
+```bash
+# Bump MARKETING_VERSION + CURRENT_PROJECT_VERSION in project.yml, then:
+git tag v0.2.1 && git push origin v0.2.1
+```
+
+The `release` GitHub Actions workflow builds, signs, notarizes, staples, EdDSA-signs, uploads the zip to a GitHub Release, and commits the appcast entry to `main`. See [SPECS § 20](./SPECS.md#20-update-system) for the full release pipeline and the secrets required.
+
+For a local release (without CI), run `scripts/release.sh 0.2.1` — same flow, single machine.
 
 ## Status
 

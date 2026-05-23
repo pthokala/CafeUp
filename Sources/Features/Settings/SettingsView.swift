@@ -4,10 +4,11 @@ struct SettingsView: View {
     @Bindable var menuBarViewModel: MenuBarViewModel
     @Bindable var appearanceViewModel: AppearanceViewModel
     let triggersViewModel: TriggersViewModel
+    let updatesViewModel: UpdatesSectionViewModel
 
     var body: some View {
         TabView {
-            GeneralSettingsView(menuBarViewModel: menuBarViewModel)
+            GeneralSettingsView(menuBarViewModel: menuBarViewModel, updatesViewModel: updatesViewModel)
                 .tabItem { Label("General", systemImage: "gearshape") }
             TriggersView(viewModel: triggersViewModel)
                 .tabItem { Label("Triggers", systemImage: "bolt") }
@@ -20,6 +21,7 @@ struct SettingsView: View {
 
 private struct GeneralSettingsView: View {
     @Bindable var menuBarViewModel: MenuBarViewModel
+    @Bindable var updatesViewModel: UpdatesSectionViewModel
 
     var body: some View {
         Form {
@@ -36,6 +38,27 @@ private struct GeneralSettingsView: View {
                     get: { menuBarViewModel.policy.allowScreenSaverAfter45Min },
                     set: { menuBarViewModel.policy.allowScreenSaverAfter45Min = $0 }
                 ))
+            }
+
+            Section("Updates") {
+                LabeledContent("Version") {
+                    Text("CafeUp \(updatesViewModel.currentVersionDisplay)")
+                        .foregroundStyle(.secondary)
+                }
+                LabeledContent("Last checked") {
+                    Text(updatesViewModel.lastCheckedDescription)
+                        .foregroundStyle(.secondary)
+                }
+                HStack {
+                    Spacer()
+                    Button("Check for Updates Now") {
+                        updatesViewModel.checkForUpdates()
+                    }
+                    .disabled(!updatesViewModel.canCheckForUpdates)
+                }
+                Text("CafeUp doesn't check for updates automatically. Use this button or the menu bar to check manually.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)

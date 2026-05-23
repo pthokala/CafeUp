@@ -4,6 +4,7 @@ import SwiftUI
 @MainActor
 struct StatusBarMenuBuilder {
     let viewModel: MenuBarViewModel
+    let updaterService: UpdaterService
     let pickApplication: () -> PickedApplication?
     let openSettings: () -> Void
     let openCustomDuration: () -> Void
@@ -44,6 +45,7 @@ struct StatusBarMenuBuilder {
             NSApp.activate(ignoringOtherApps: true)
             NSApp.orderFrontStandardAboutPanel(nil)
         })
+        menu.addItem(checkForUpdatesItem())
         menu.addItem(submenu(title: "Feedback & Support", buildItems: feedbackItems))
 
         menu.addItem(.separator())
@@ -148,6 +150,14 @@ struct StatusBarMenuBuilder {
         item.target = target
         objc_setAssociatedObject(item, &quickToggleTargetKey, target, .OBJC_ASSOCIATION_RETAIN)
         return [item]
+    }
+
+    private func checkForUpdatesItem() -> NSMenuItem {
+        let item = ClosureMenuItem(title: "Check for Updates…") { [updaterService] in
+            updaterService.checkForUpdates()
+        }
+        item.isEnabled = updaterService.canCheckForUpdates
+        return item
     }
 
     private func feedbackItems() -> [NSMenuItem] {

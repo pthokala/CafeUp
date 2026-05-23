@@ -25,6 +25,7 @@ Comprehensive specification of CafeUp's user-facing behavior, internal architect
 17. [Testing strategy](#17-testing-strategy)
 18. [Backward compatibility & migration](#18-backward-compatibility--migration)
 19. [Known limitations & non-goals](#19-known-limitations--non-goals)
+20. [Update system](#20-update-system)
 
 ---
 
@@ -42,7 +43,7 @@ The app is a single binary; there is no companion daemon. Everything runs in the
 
 **Bundle identifier:** `com.pardhu.CafeUp`
 **Bundle display name:** `CafeUp`
-**Version:** `0.1.0 (1)` (`MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` in `project.yml`)
+**Version:** `0.2.0 (2)` (`MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` in `project.yml`)
 
 ---
 
@@ -500,27 +501,36 @@ All three tabs share the same `MenuBarViewModel` / `TriggersViewModel` / `Appear
 
 ## 12. Appearance / menu-bar icon system
 
-13 icon styles. Each style has distinct `isActive: true` and `isActive: false` renderings.
+18 icon styles, grouped by theme. Each style has distinct `isActive: true` and `isActive: false` renderings.
 
-| Style | Idle | Active |
-|---|---|---|
-| `coffeeBean` | hollow bean | filled bean |
-| `cupAndSaucer` | `cup.and.saucer` | `cup.and.saucer.fill` |
-| `cupAndSteam` | `cup.and.heat.waves` | `cup.and.heat.waves.fill` |
-| `mug` | `mug` | `mug.fill` |
-| `takeoutCup` | `takeoutbag.and.cup.and.straw` | `takeoutbag.and.cup.and.straw.fill` |
-| `dot` | hollow circle | filled circle |
-| `dividedDisc` | horizontal split | vertical split |
-| `dividedCircle` | horizontal split | vertical split |
-| `circle` | `circle` | `circle.fill` |
-| `pill` | `pill` | `pill.fill` |
-| `bolt` | `bolt` | `bolt.fill` |
-| `eye` | `eye.slash` | `eye.fill` |
-| `sun` | `sun.max` | `sun.max.fill` |
+| Group | Style | Idle | Active |
+|---|---|---|---|
+| Coffee | `cupAndSaucer` *(default)* | `cup.and.saucer` | `cup.and.saucer.fill` |
+| Coffee | `cupAndSteam` | `cup.and.heat.waves` | `cup.and.heat.waves.fill` |
+| Coffee | `mug` | `mug` | `mug.fill` |
+| Coffee | `espressoDrop` | `drop` | `drop.fill` |
+| Energy | `bolt` | `bolt` | `bolt.fill` |
+| Energy | `powerToggle` | `power.circle` | `power.circle.fill` |
+| Energy | `flame` | `flame` | `flame.fill` |
+| Energy | `battery` | `battery.0percent` | `battery.100percent` |
+| Light | `ledBulb` | `lightbulb.led` | `lightbulb.led.fill` |
+| Light | `deskLamp` | `lamp.desk` | `lamp.desk.fill` |
+| Light | `sun` | `sun.max` | `sun.max.fill` |
+| Sleep | `moon` | `moon` | `moon.fill` |
+| Sleep | `owl` | `bird` | `bird.fill` |
+| Abstract | `hexagon` | `hexagon` | `hexagon.fill` |
+| Abstract | `circle` | `circle` | `circle.fill` |
+| Abstract | `pill` | `pill` | `pill.fill` |
+| Abstract | `dot` | hollow circle (custom) | filled circle (custom) |
+| Abstract | `dividedDisc` | horizontal split (custom) | vertical split (custom) |
 
 Default: `cupAndSaucer`.
 
-Non-SF-Symbol styles (coffee bean, divided disc/circle, dot) are SwiftUI shape glyphs (`CoffeeBeanGlyph`, `DividedCircleGlyph`, etc.) rasterized to template `NSImage` via `ImageRenderer` and marked `nsImage.isTemplate = true` so they honor the menu bar tint and dark/light mode.
+`dot` and `dividedDisc` are SwiftUI shape glyphs (`SolidCircleGlyph`, `DividedDiscGlyph`). The `MenuBarIconImage.template(for:isActive:)` helper rasterizes them to a template `NSImage` via `ImageRenderer` with `isTemplate = true`. SF-Symbol styles go through `NSImage(systemSymbolName:)` directly so they stay vector at high-DPI.
+
+`battery` is **state-asymmetric**: idle = `battery.0percent` (empty / sleeping), active = `battery.100percent` (full / powered). All other styles use the conventional outline → `.fill` pairing.
+
+The non-coffee additions (`flame`, `owl`, `deskLamp`, `hexagon`, `moon`, `battery`) are inspired by Amphetamine's stock icon set; they map Apple-shipped SF Symbols to the equivalent metaphors. Amphetamine's "Tea Kettle" was considered but SF Symbols' `kettle` requires a newer macOS than our 14.0 deployment target — skipped until we raise it.
 
 ---
 
@@ -734,3 +744,159 @@ There is no schema-version file; backward compatibility is built into each decod
 - Per-display assertions (CafeUp is single-system-wide).
 - Custom power profiles beyond the three Bool model.
 - Visual themes beyond menu-bar icon selection (the main window respects system appearance).
+
+---
+
+## 20. Update system
+
+CafeUp ships updates through [Sparkle](https://sparkle-project.org) 2.x. The app **never checks for updates automatically** — every check is initiated by the user via the *Check for Updates…* menu item or the *Check for Updates Now* button in Settings → General → Updates.
+
+### Architecture
+
+```
+            user click
+                │
+                ▼
+┌──────────────────────────────────┐         ┌───────────────────────────────┐
+│  StatusBarMenuBuilder           │         │  UpdatesSectionViewModel       │
+│  (Check for Updates… item)      │         │  (Settings → General)          │
+└──────────────────────────────────┘         └───────────────────────────────┘
+                │                                          │
+                └──────────────────┬───────────────────────┘
+                                   ▼
+                         ┌──────────────────────┐
+                         │  UpdaterService      │  protocol — testable boundary
+                         │  (@MainActor)        │
+                         └──────────────────────┘
+                                   ▲
+                                   │
+                  ┌────────────────┴────────────────┐
+                  ▼                                 ▼
+        ┌────────────────────┐            ┌────────────────────┐
+        │ SparkleUpdater     │            │ FakeUpdaterService │
+        │ Service            │            │ (tests)            │
+        │  (wraps Sparkle)   │            └────────────────────┘
+        └────────────────────┘
+                  │
+                  ▼
+        ┌────────────────────┐
+        │ SPUStandard        │  Sparkle 2 framework
+        │ UpdaterController  │  (embedded; ships with XPC services)
+        └────────────────────┘
+                  │
+                  ▼
+        ┌────────────────────┐
+        │ appcast.xml        │  https://pthokala.github.io/CafeUp/appcast.xml
+        │ + signed .zip      │  https://github.com/pthokala/CafeUp/releases/...
+        └────────────────────┘
+```
+
+### Sparkle Info.plist keys
+
+| Key | Value | Why |
+|---|---|---|
+| `SUFeedURL` | `https://pthokala.github.io/CafeUp/appcast.xml` | Where Sparkle fetches the update manifest |
+| `SUPublicEDKey` | `OAE6wYuiNNZdDgvz4bl+mpQPYZc4nJvXPy08RmB2WwU=` | Public half of the EdDSA keypair; Sparkle uses this to verify the signature on downloaded archives |
+| `SUEnableAutomaticChecks` | `false` | Sparkle's background timer is off; no checks run unless the user clicks |
+| `SUAllowsAutomaticUpdates` | `false` | The auto-download-and-install opt-in is never offered to the user |
+
+`SparkleUpdaterService.init` also sets `updater.automaticallyChecksForUpdates = false` defensively at runtime, so a stale `UserDefaults` value (from a prior build that flipped it) cannot re-enable background checking.
+
+### EdDSA key management
+
+The signing key is **independent of Apple's Developer ID certificate**. Sparkle uses it to verify that the downloaded archive comes from us (defense against an attacker who compromises the appcast host or the GitHub Release).
+
+**One-time generation** (already done — do not regenerate, doing so invalidates every shipped update):
+
+```bash
+xcodebuild -project CafeUp.xcodeproj -scheme CafeUp -resolvePackageDependencies
+~/Library/Developer/Xcode/DerivedData/CafeUp-*/SourcePackages/artifacts/sparkle/Sparkle/bin/generate_keys
+```
+
+- The **private key** is stored in the macOS login keychain under "https://sparkle-project.org". `sign_update` finds it automatically.
+- The **public key** was pasted into `project.yml` as `SUPublicEDKey`.
+
+**Exporting the private key for CI** (one-time):
+
+```bash
+~/Library/Developer/Xcode/DerivedData/CafeUp-*/SourcePackages/artifacts/sparkle/Sparkle/bin/generate_keys \
+  -x ed_private_key.txt
+# Copy the file contents into a GitHub Actions secret named SPARKLE_ED_PRIVATE_KEY
+rm ed_private_key.txt
+```
+
+### Appcast format
+
+Hosted at `docs/appcast.xml` on `main`, served by GitHub Pages. Sparkle 2 spec. Minimum item:
+
+```xml
+<item>
+  <title>Version 0.2.1</title>
+  <sparkle:version>3</sparkle:version>                 <!-- compared as integer, MUST be monotonic -->
+  <sparkle:shortVersionString>0.2.1</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+  <pubDate>Mon, 23 Jun 2026 12:00:00 +0000</pubDate>
+  <description><![CDATA[<p>Bug fixes.</p>]]></description>
+  <enclosure
+    url="https://github.com/pthokala/CafeUp/releases/download/v0.2.1/CafeUp-0.2.1.zip"
+    length="2348295"
+    type="application/octet-stream"
+    sparkle:edSignature="…"/>
+</item>
+```
+
+### Release process
+
+**Tagged push triggers CI** (`.github/workflows/release.yml`):
+
+1. Workflow verifies all required secrets are present.
+2. Imports Developer ID cert into a temp keychain on the macOS-14 runner.
+3. `xcodegen generate`, `xcodebuild -resolvePackageDependencies`.
+4. `xcodebuild archive` → `xcodebuild -exportArchive` (developer-id method).
+5. `codesign --verify --strict` on the .app and the embedded Sparkle.framework.
+6. `ditto` → zip → `xcrun notarytool submit --wait` → `xcrun stapler staple` → re-zip.
+7. Pipes `SPARKLE_ED_PRIVATE_KEY` via stdin into `sign_update --ed-key-file -` (key never on disk).
+8. `gh release create v<version>` with the zip attached.
+9. Appends the new `<item>` block to `docs/appcast.xml` and commits back to `main` with `[skip ci]`.
+
+**Required GitHub Actions secrets:**
+
+| Secret | Source |
+|---|---|
+| `DEV_ID_CERT_P12_BASE64` | `base64 -i DeveloperID.p12` |
+| `DEV_ID_CERT_PASSWORD` | Password used when exporting the .p12 |
+| `KEYCHAIN_PASSWORD` | Any throwaway password (used only on the runner) |
+| `APPLE_API_KEY_ID` | App Store Connect API key id (10 chars) |
+| `APPLE_API_KEY_ISSUER` | App Store Connect issuer UUID |
+| `APPLE_API_KEY_P8_BASE64` | `base64 -i AuthKey_XXXXXX.p8` |
+| `SPARKLE_ED_PRIVATE_KEY` | Contents of `ed_private_key.txt` from `generate_keys -x` |
+
+**Local releases** (no CI):
+
+```bash
+scripts/release.sh 0.2.1
+```
+
+The script preflights cleanly: aborts if working tree is dirty, if not on `main`, if `project.yml` version mismatches the arg, or if no Developer ID certificate is present. Outputs the `<item>` block ready to paste into `docs/appcast.xml`.
+
+### Version-bump discipline
+
+`CURRENT_PROJECT_VERSION` (build number) **must strictly increase** on every release. Sparkle compares `<sparkle:version>` (which maps to `CURRENT_PROJECT_VERSION`), not the marketing version. Forgetting to bump it is the most common release bug — users see "you're up to date" even though the appcast item is new.
+
+`MARKETING_VERSION` (semver) is what the user sees in About / Settings. Bump per semver discipline.
+
+### Verifying an update flow locally
+
+Without a real Developer ID + Pages site you can still test the UI:
+
+1. Generate a fake higher-version appcast pointing at `file://...` enclosures.
+2. Set `SUFeedURL` temporarily to that local file URL (rebuild).
+3. Trigger *Check for Updates…* — Sparkle's modal should appear and offer the install (which will fail at signature-verification time, as expected, since you don't have a real EdDSA-signed archive).
+
+### Non-goals
+
+- **Automatic background checks** — explicit user choice; the related `SUEnableAutomaticChecks` and `SUAllowsAutomaticUpdates` are pinned to `false`.
+- **Beta channel** (`<sparkle:channel>`) — stable channel only; revisit when there's beta traffic to support.
+- **Delta updates** — `generate_appcast`'s binary-delta generation; bundle is currently too small for meaningful bandwidth savings.
+- **Signed feeds** (`SURequireSignedFeed`) — extra defense for the appcast XML; worth adding once we're shipping at scale.
+- **Custom Sparkle UI** — Sparkle's stock dialog is well-localized and accessible; no reason to roll our own.

@@ -6,6 +6,8 @@ enum CompositionRoot {
         let menuBarViewModel: MenuBarViewModel
         let triggersViewModel: TriggersViewModel
         let appearanceViewModel: AppearanceViewModel
+        let updatesViewModel: UpdatesSectionViewModel
+        let updaterService: UpdaterService
         let appPicker: AppPicker
     }
 
@@ -32,6 +34,7 @@ enum CompositionRoot {
         AppIntentBridge.shared.register(sessionEngine: sessionEngine)
 
         let appPicker = OpenPanelAppPicker()
+        let updaterService = SparkleUpdaterService()
 
         return AppDependencies(
             menuBarViewModel: MenuBarViewModel(
@@ -48,6 +51,8 @@ enum CompositionRoot {
             appearanceViewModel: AppearanceViewModel(
                 store: UserDefaultsIconStylePreferenceStore()
             ),
+            updatesViewModel: UpdatesSectionViewModel(updater: updaterService),
+            updaterService: updaterService,
             appPicker: appPicker
         )
     }

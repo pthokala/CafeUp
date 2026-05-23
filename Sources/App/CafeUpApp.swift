@@ -10,7 +10,8 @@ struct CafeUpApp: App {
             SettingsView(
                 menuBarViewModel: appDelegate.deps.menuBarViewModel,
                 appearanceViewModel: appDelegate.deps.appearanceViewModel,
-                triggersViewModel: appDelegate.deps.triggersViewModel
+                triggersViewModel: appDelegate.deps.triggersViewModel,
+                updatesViewModel: appDelegate.deps.updatesViewModel
             )
             .onAppear { appDelegate.openWindow = { id in openWindow(id: id) } }
         }

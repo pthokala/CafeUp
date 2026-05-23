@@ -30,8 +30,8 @@ final class IconStylePreferenceStoreTests: XCTestCase {
     }
 
     func test_persistence_acrossInstances() {
-        UserDefaultsIconStylePreferenceStore(defaults: defaults).save(.eye)
-        XCTAssertEqual(UserDefaultsIconStylePreferenceStore(defaults: defaults).load(), .eye)
+        UserDefaultsIconStylePreferenceStore(defaults: defaults).save(.flame)
+        XCTAssertEqual(UserDefaultsIconStylePreferenceStore(defaults: defaults).load(), .flame)
     }
 
     func test_load_withCorruptValue_returnsDefault() {

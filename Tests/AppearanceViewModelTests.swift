@@ -14,9 +14,9 @@ final class AppearanceViewModelTests: XCTestCase {
         let store = InMemoryIconStyleStore()
         let vm = AppearanceViewModel(store: store)
 
-        vm.iconStyle = .eye
+        vm.iconStyle = .flame
 
-        XCTAssertEqual(store.load(), .eye)
+        XCTAssertEqual(store.load(), .flame)
         XCTAssertEqual(store.saveCount, 1)
     }
 

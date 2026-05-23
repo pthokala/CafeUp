@@ -101,10 +101,6 @@ private struct IconStylePreview: View {
             case .symbol(let name):
                 Image(systemName: name)
                     .font(.title)
-            case .dividedCircle(let orientation):
-                DividedCircleGlyph(orientation: orientation)
-            case .coffeeBean(let isFilled):
-                CoffeeBeanGlyph(isFilled: isFilled)
             case .solidCircle(let isFilled):
                 SolidCircleGlyph(isFilled: isFilled)
             case .dividedDisc(let orientation):
