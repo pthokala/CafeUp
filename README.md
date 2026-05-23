@@ -1,0 +1,132 @@
+# CafeUp
+
+A native macOS menu-bar app that keeps your Mac awake — modeled after [Amphetamine](https://apps.apple.com/us/app/amphetamine/id937984704). One click in the menu bar starts a session; the system (and optionally the display) stays awake until you tell it to stop, the timer runs out, the app you tied it to quits, or your downloads finish.
+
+![menu bar idle](./docs/screenshots/menu-idle.png)
+![menu bar active](./docs/screenshots/menu-active.png)
+
+---
+
+## Features
+
+### Starting a session
+- **Indefinitely** (⌘I) — stays on until you stop it.
+- **Minutes presets** — 5, 10, 15, 20, 30, 45 min.
+- **Hours presets** — 1, 2, 3, 4, 5, 6, 8, 12 h.
+- **Custom Duration…** — pick any hours + minutes.
+- **End at Time…** — keep awake until a specific clock time today (auto-rolls to tomorrow if the time has passed).
+- **While App is Running** — pick from running apps or browse for any `.app`; CafeUp ends the session when that app terminates.
+- **While File is Downloading…** (⌘F) — polls `~/Downloads` for partial files (`.download`, `.crdownload`, `.part`, `.partial`) and stays awake until they finish.
+
+### Wake-behavior toggles (per active session)
+- **Allow display sleep** — releases the display assertion so the screen can go dark.
+- **Allow system sleep when display is closed** — releases the clamshell assertion, letting the Mac sleep when the lid is closed.
+- **Allow screen saver after 45m of inactivity** — releases the display assertion automatically once the user has been idle ≥ 45 minutes, then reacquires it when the user returns.
+
+### Triggers (automatic activation)
+Define rules in **Settings → Triggers** that activate sessions automatically:
+- **App is running** — keeps awake while a specific bundle ID is in `runningApplications`.
+- **Schedule** — keeps awake on chosen weekdays within a time range.
+- **On AC power** — keeps awake only when plugged in.
+- **Battery ≥ N%** — keeps awake only when battery is above threshold.
+
+Triggers combine with AND semantics; multiple active triggers use the strictest wake policy.
+
+### Appearance
+13 menu-bar icon styles (Coffee Cup, Steaming Cup, Mug, Takeout Cup, Coffee Bean, Divided Disc, Divided Circle, Dot, Circle, Pill, Bolt, Eye, Sun). Active and idle variants render distinctly.
+
+### Settings window (⌘,)
+Three tabs: **General** (default wake behavior), **Triggers** (CRUD), **Appearance** (icon picker).
+
+---
+
+## Build & run
+
+Requirements: macOS 14+, Xcode 15+, [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`).
+
+```bash
+git clone <repo-url> CafeUp && cd CafeUp
+xcodegen generate
+open CafeUp.xcodeproj
+# ⌘R to run, or:
+xcodebuild -scheme CafeUp -configuration Debug build
+```
+
+The app installs as a menu-bar-only app (`LSUIElement: true`); look for the cup icon in your menu bar.
+
+---
+
+## Testing
+
+```bash
+xcodebuild -scheme CafeUp -configuration Debug test
+```
+
+180+ unit tests cover the session engine, trigger engine, view models, wake-policy persistence, downloads monitor, idle observer, and live-ticker logic. See [TESTING.md](./TESTING.md) for the per-test matrix.
+
+---
+
+## Architecture (one-screen overview)
+
+```
+┌──────────────────────────────────────────────────┐
+│  CafeUpApp  ←  AppDelegate  ←  CompositionRoot   │  Composition
+└──────────────────────────────────────────────────┘
+                       │
+   ┌───────────────────┼───────────────────┐
+   ▼                   ▼                   ▼
+┌────────────┐  ┌──────────────┐  ┌───────────────┐
+│MenuBarVM   │  │TriggersVM    │  │AppearanceVM   │   ViewModels
+└────────────┘  └──────────────┘  └───────────────┘
+   │                   │                   │
+   ▼                   ▼                   │
+┌────────────┐  ┌──────────────┐           │
+│SessionEng. │  │TriggerEngine │           │           Engines
+└────────────┘  └──────────────┘           │
+   │                   │                   │
+   ▼                   ▼                   ▼
+┌──────────────────────────────────────────────┐
+│  IOKit assertions  ·  NSWorkspace observer   │   Services
+│  Downloads monitor ·  Idle observer          │
+│  Power observer    ·  Trigger store          │
+└──────────────────────────────────────────────┘
+```
+
+Full layer breakdown, domain model, persistence format, and IOKit mapping in [SPECS.md](./SPECS.md).
+
+---
+
+## File layout
+
+```
+Sources/
+  App/            CafeUpApp, AppDelegate, CompositionRoot, WindowID, intents
+  Core/           SessionEngine, TriggerEngine
+  Domain/         Session, Trigger, WakePolicy, WorldState, value types
+  Services/       PowerAssertionService, AppActivityObserver,
+                  AppLifetimeWatcher, DownloadsMonitor, UserIdleObserver,
+                  ScheduleObserver, PowerObserver, TriggerStore,
+                  Scheduler, Clock, Logger, IconStylePreferenceStore
+  Features/
+    MenuBar/      StatusBarController, MenuBarView, ActiveSessionPanel,
+                  CustomDurationView, EndAtTimeView, MenuBarIcon,
+                  MenuBarViewModel, SessionPresets, RemainingFormatter
+    Triggers/     TriggersView, TriggerEditorView, TriggerDraft,
+                  TriggersViewModel, AppPicker
+    Appearance/   IconPickerView, AppearanceViewModel, glyphs
+    Settings/     SettingsView
+  Resources/      Info.plist, entitlements
+Tests/            ~180 unit tests + fakes for every protocol service
+```
+
+---
+
+## Status
+
+Active development. Visual parity with Amphetamine for the active-session panel and main menu is the current focus.
+
+---
+
+## Credits
+
+UI and feature set inspired by [Amphetamine](https://roaringapps.com/app/amphetamine) by William Gustafson. CafeUp is an independent reimplementation, not affiliated.
