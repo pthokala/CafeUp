@@ -2,9 +2,6 @@
 
 A native macOS menu-bar app that keeps your Mac awake — modeled after [Amphetamine](https://apps.apple.com/us/app/amphetamine/id937984704). One click in the menu bar starts a session; the system (and optionally the display) stays awake until you tell it to stop, the timer runs out, the app you tied it to quits, or your downloads finish.
 
-![menu bar idle](./docs/screenshots/menu-idle.png)
-![menu bar active](./docs/screenshots/menu-active.png)
-
 ---
 
 ## Features
@@ -32,6 +29,11 @@ Define rules in **Settings → Triggers** that activate sessions automatically:
 
 Triggers combine with AND semantics; multiple active triggers use the strictest wake policy.
 
+### Shortcuts & Siri
+Two built-in App Intents, usable from the Shortcuts app, Spotlight, or Siri:
+- **Start CafeUp Session** — optional duration parameter (1–1440 minutes); omit for indefinite. Phrases: *"Start a CafeUp session"*, *"Keep my Mac awake with CafeUp"*.
+- **Stop CafeUp Session** — *"Stop CafeUp session"*, *"Let my Mac sleep with CafeUp"*.
+
 ### Appearance
 13 menu-bar icon styles (Coffee Cup, Steaming Cup, Mug, Takeout Cup, Coffee Bean, Divided Disc, Divided Circle, Dot, Circle, Pill, Bolt, Eye, Sun). Active and idle variants render distinctly.
 
@@ -52,7 +54,7 @@ Three tabs: **General** (default wake behavior + updates), **Triggers** (CRUD), 
 Requirements: macOS 14+, Xcode 15+, [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`).
 
 ```bash
-git clone <repo-url> CafeUp && cd CafeUp
+git clone https://github.com/pthokala/CafeUp.git && cd CafeUp
 xcodegen generate
 open CafeUp.xcodeproj
 # ⌘R to run, or:
