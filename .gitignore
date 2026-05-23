@@ -16,3 +16,7 @@ Package.resolved
 
 # CocoaPods (if used later)
 Pods/
+
+# Claude Code local settings
+.claude/
+

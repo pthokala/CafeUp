@@ -46,9 +46,28 @@ struct MenuBarView: View {
         Section("Current Session Details:") {
             LiveSessionStatusLine(viewModel: viewModel)
             Text(activationLabel)
-            allowDisplaySleepToggle
-            Button("End Current Session") { viewModel.stop() }
-                .keyboardShortcut("x", modifiers: .command)
+        }
+        Section {
+            Toggle("Allow display sleep", isOn: Binding(
+                get: { viewModel.policy.allowDisplaySleep },
+                set: { viewModel.policy.allowDisplaySleep = $0 }
+            ))
+            Toggle("Allow system sleep when display is closed", isOn: Binding(
+                get: { viewModel.policy.allowSystemSleepWhenLidClosed },
+                set: { viewModel.policy.allowSystemSleepWhenLidClosed = $0 }
+            ))
+            Toggle("Allow screen saver after 45m of inactivity", isOn: Binding(
+                get: { viewModel.policy.allowScreenSaverAfter45Min },
+                set: { viewModel.policy.allowScreenSaverAfter45Min = $0 }
+            ))
+        }
+        Section {
+            Button {
+                viewModel.stop()
+            } label: {
+                Label("End Current Session", systemImage: "stop.circle.fill")
+            }
+            .keyboardShortcut("x", modifiers: .command)
         }
     }
 
@@ -131,8 +150,8 @@ struct MenuBarView: View {
 
     private var allowDisplaySleepToggle: some View {
         Toggle("Allow display sleep", isOn: Binding(
-            get: { viewModel.policy == .systemOnly },
-            set: { viewModel.policy = $0 ? .systemOnly : .systemAndDisplay }
+            get: { viewModel.policy.allowDisplaySleep },
+            set: { viewModel.policy.allowDisplaySleep = $0 }
         ))
     }
 

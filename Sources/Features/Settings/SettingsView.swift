@@ -24,11 +24,18 @@ private struct GeneralSettingsView: View {
     var body: some View {
         Form {
             Section("Default Wake Behavior") {
-                Picker("Sleep policy", selection: $menuBarViewModel.policy) {
-                    Text("Keep system and display awake").tag(WakePolicy.systemAndDisplay)
-                    Text("Allow display to sleep").tag(WakePolicy.systemOnly)
-                }
-                .pickerStyle(.radioGroup)
+                Toggle("Allow display sleep", isOn: Binding(
+                    get: { menuBarViewModel.policy.allowDisplaySleep },
+                    set: { menuBarViewModel.policy.allowDisplaySleep = $0 }
+                ))
+                Toggle("Allow system sleep when display is closed", isOn: Binding(
+                    get: { menuBarViewModel.policy.allowSystemSleepWhenLidClosed },
+                    set: { menuBarViewModel.policy.allowSystemSleepWhenLidClosed = $0 }
+                ))
+                Toggle("Allow screen saver after 45m of inactivity", isOn: Binding(
+                    get: { menuBarViewModel.policy.allowScreenSaverAfter45Min },
+                    set: { menuBarViewModel.policy.allowScreenSaverAfter45Min = $0 }
+                ))
             }
         }
         .formStyle(.grouped)

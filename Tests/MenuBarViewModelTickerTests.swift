@@ -76,7 +76,7 @@ final class MenuBarViewModelTickerTests: XCTestCase {
     func test_sessionStatusLine_indefiniteSession() {
         let sut = makeSUT()
         sut.viewModel.startIndefinite()
-        XCTAssertEqual(sut.viewModel.sessionStatusLine(), "Indefinite session")
+        XCTAssertEqual(sut.viewModel.sessionStatusLine(), "Indeterminate time remaining")
     }
 
     func test_sessionStatusLine_timedSession_advancesWithSimulatedTime() {

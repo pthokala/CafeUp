@@ -125,7 +125,7 @@ final class TriggerEngine {
                 reason: "CafeUp trigger keeping Mac awake"
             )
             activePolicy = policy
-            logger.info("Trigger assertion acquired (\(policy.rawValue))")
+            logger.info("Trigger assertion acquired (\(policy))")
         } catch {
             logger.error("Trigger assertion failed: \(error.localizedDescription)")
         }

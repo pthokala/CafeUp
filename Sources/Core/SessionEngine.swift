@@ -72,7 +72,7 @@ final class SessionEngine {
         }
 
         logger.info(
-            "Session started: mode=\(String(describing: mode)) policy=\(policy.rawValue) "
+            "Session started: mode=\(String(describing: mode)) policy=\(policy) "
             + "startedAt=\(startedAt) endsAt=\(endsAt.map(String.init(describing:)) ?? "nil")"
         )
     }

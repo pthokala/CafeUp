@@ -38,7 +38,8 @@ enum CompositionRoot {
                 engine: sessionEngine,
                 triggerEngine: triggerEngine,
                 appLifetimeWatcher: NSWorkspaceAppLifetimeWatcher(),
-                downloadsMonitor: FileSystemDownloadsMonitor()
+                downloadsMonitor: FileSystemDownloadsMonitor(),
+                idleObserver: CGEventSourceIdleObserver()
             ),
             triggersViewModel: TriggersViewModel(
                 engine: triggerEngine,

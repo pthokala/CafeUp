@@ -28,6 +28,7 @@
 		356616F8E62FACA1731CBBBF /* UserDefaultsTriggerStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 751CB2CFF2B219ADF766F15C /* UserDefaultsTriggerStoreTests.swift */; };
 		366D78BFAC400A48DA8DB229 /* WorldState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38F457CC065D77AB10A51F1F /* WorldState.swift */; };
 		3A4312495B474DE59BC54AD8 /* IconStylePreferenceStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 691068D02528E968BD96FBC0 /* IconStylePreferenceStoreTests.swift */; };
+		3A6FCFEBD53298D1D958F6CA /* WakePolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B780A37CCFA19C9B7793BDC6 /* WakePolicyTests.swift */; };
 		3E80E764BC56CB9C6924470B /* TriggerEvaluationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8CBA8977FBB9AC910BEFC0A /* TriggerEvaluationTests.swift */; };
 		3ECDD4E392FC857171A3AAC9 /* PowerSourceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CE762BE73DB1023949BFE23 /* PowerSourceTests.swift */; };
 		4A16EFFF484DF9D6F21AE0F1 /* FakeAppActivityObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04844AAADDCFEF8065C44AC7 /* FakeAppActivityObserver.swift */; };
@@ -36,23 +37,30 @@
 		4D69394BB042C591CF57196D /* Trigger.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFC450F8644E1AE8B876DAF2 /* Trigger.swift */; };
 		4DAA8238D0D184A2F3DF08AC /* TriggerEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCD85F9F1E1F1F020581AA65 /* TriggerEngine.swift */; };
 		4E9CDA86DC5D51443492FAB3 /* FakePowerAssertionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03C2FE9FD4834E2641C2D0A1 /* FakePowerAssertionService.swift */; };
+		52C9B2DC19A10CB18D9D51EA /* ClosureMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A8AA8ED119730602B4602C7 /* ClosureMenuItem.swift */; };
 		58A271F7BBE5808E38732D68 /* AppIntentBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = D21EDB52AB46D2FFECAB8808 /* AppIntentBridge.swift */; };
 		5F8F5FC1074D92000772AAF4 /* RemainingFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD8BBE6E216D75FC5667763D /* RemainingFormatter.swift */; };
 		62B49D055968E3F06DC7965D /* DownloadsMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 269A5085A2CAD0BC21E26A77 /* DownloadsMonitor.swift */; };
 		62E69CE2035CB23E3CEFDFC3 /* TimeOfDay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09FAD9BB895CA387CDF1ED13 /* TimeOfDay.swift */; };
 		687A468E5D998DC40594CDA9 /* TriggerDraftTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CD97E9AC8FAC79F59426E10 /* TriggerDraftTests.swift */; };
 		6969A09C64100971DB9D87F6 /* MenuBarViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94C177CF15596ABC0D07A81C /* MenuBarViewModel.swift */; };
+		6A1E03FFAB6D9C044E9FF76E /* StatusBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 028EF90250CDC1FFBDFE54A2 /* StatusBarController.swift */; };
 		6DB0715C63249C66FE23A6E8 /* CafeUpApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EBAE91FAE6E7E1E18117D0F /* CafeUpApp.swift */; };
 		6E70BBE0FB7560B6B92A6B3B /* CoffeeBeanGlyph.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77E2430F81892A178C4C9B8F /* CoffeeBeanGlyph.swift */; };
 		729AA52757BC2695259C7760 /* RemainingFormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD72A324C7D29ED8798764F3 /* RemainingFormatterTests.swift */; };
+		734D1F1804F97148EDE94EB1 /* FakeUserIdleObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F56B5D9D56703BCB9D3A4DF /* FakeUserIdleObserver.swift */; };
+		737018EE0DBF3E4E427AC43A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EBF8F519E78A0AD7B447F1E /* AppDelegate.swift */; };
 		759C827BDB12C1BFF5C83B8E /* EndAtTimeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F67A8820415E19B1922B479 /* EndAtTimeView.swift */; };
 		76D8E2A6D444C9E7C5B19C69 /* MenuBarIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4013C55ACC2BEE289D82450A /* MenuBarIcon.swift */; };
 		7A264F86C362ACBE016C4523 /* TimeRangeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1747849A6CD83223536F7F25 /* TimeRangeTests.swift */; };
 		7A70A3AF1035C1CE4ED18E4D /* SessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A80E3F2DDBDCD2BE58DADB71 /* SessionTests.swift */; };
 		81A701C9D6F84D9100A1763F /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1423246595D0C11C18068969 /* Logger.swift */; };
+		835F32143F6D1277A44C93C9 /* MenuBarViewSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F5BC4C402216EF90C1B3FAD /* MenuBarViewSnapshotTests.swift */; };
 		882CDD825CF9CCD62B906A54 /* TriggerEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F55B26E9579B9729F9C94A /* TriggerEngineTests.swift */; };
+		8C4C2EAFD08C31CDB267375D /* StatusBarMenuBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C775DF81E9158FF516E6506 /* StatusBarMenuBuilder.swift */; };
 		8CE81A474C2A4B6017226FE0 /* WorldStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3752D30545B1F1E4797D560B /* WorldStateTests.swift */; };
 		9399978365DD1FF0C33ABB44 /* PowerObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90BEBC30EFA72337F0D56277 /* PowerObserver.swift */; };
+		976254C1C1C662D5ADED3FFB /* ActiveSessionPanelSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF3273882F4631F90F56820A /* ActiveSessionPanelSnapshotTests.swift */; };
 		997A3CDF2AE2001E933FEED5 /* SessionEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26D08D4B3276DBFA2583BF06 /* SessionEngineTests.swift */; };
 		9BF0C5D26D8F9642DF66C365 /* FakeScheduleObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FBB10CD7D34D9B949AF967F /* FakeScheduleObserver.swift */; };
 		9C40A867D87BE77F7ED99DCF /* IconPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B787C3467606EB68A7B2E94 /* IconPickerView.swift */; };
@@ -65,8 +73,10 @@
 		AE5A1B188032D29078EBA44D /* MenuBarIconStyleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0191D4030ECAF43B83C3339 /* MenuBarIconStyleTests.swift */; };
 		B505625184664F7FBB3CC16E /* WeekdayTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C657C5254FB90BCF490CB9C9 /* WeekdayTests.swift */; };
 		B55F6B4BC0C3E46EF589F484 /* TriggerCondition.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE25E0F35DEEEB4193E7831E /* TriggerCondition.swift */; };
+		B638B3282AE2DF4852D06033 /* MenuBarViewModelScreenSaverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1719D7F7BABE901960DE7E7D /* MenuBarViewModelScreenSaverTests.swift */; };
 		BA268A848ECB3704BB377E2C /* SessionError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37A5B01FCF1EE62C07FBAFE0 /* SessionError.swift */; };
 		BBA52F990EC1C7763ED18312 /* CompositionRoot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2659B06B87D5D39839407DAA /* CompositionRoot.swift */; };
+		BEB871150EE6A428D1AFEA28 /* ActiveSessionPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 992F6C8D08CE37798EAA2FCA /* ActiveSessionPanel.swift */; };
 		C192C6B38A6D448470934567 /* AppLifetimeWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAADA5C51C29BCF012CB00B1 /* AppLifetimeWatcher.swift */; };
 		C7BECDEABDC2548ADB995908 /* DividedDiscGlyph.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35C68D8A9DA35A540E6EA682 /* DividedDiscGlyph.swift */; };
 		CC64147CE4D569225DBB5E9F /* AppActivityObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = E76705E1E021E5C1EC29FE60 /* AppActivityObserver.swift */; };
@@ -88,6 +98,7 @@
 		E43CF2AE7DAC67257F437F1A /* AppPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8149C5EF72481F822EFB0412 /* AppPicker.swift */; };
 		EFCEAFF60BC6BB2872591599 /* FakeClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 939E48BAAFBF4BFBFED20E6E /* FakeClock.swift */; };
 		F93CE9FF6253EBB5EE63CE31 /* PowerSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC3C71755041002A51D2DCB /* PowerSource.swift */; };
+		FC510B8A770B55256C1F4E9B /* UserIdleObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1196A1AF58067EF5D62051C /* UserIdleObserver.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -102,14 +113,17 @@
 
 /* Begin PBXFileReference section */
 		017CAFB7041C8A4E56160CDF /* ScheduleObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleObserver.swift; sourceTree = "<group>"; };
+		028EF90250CDC1FFBDFE54A2 /* StatusBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBarController.swift; sourceTree = "<group>"; };
 		03C2FE9FD4834E2641C2D0A1 /* FakePowerAssertionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FakePowerAssertionService.swift; sourceTree = "<group>"; };
 		04844AAADDCFEF8065C44AC7 /* FakeAppActivityObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FakeAppActivityObserver.swift; sourceTree = "<group>"; };
 		09D7F87B56A4FFC3B20B2FAB /* TriggersViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TriggersViewModelTests.swift; sourceTree = "<group>"; };
 		09FAD9BB895CA387CDF1ED13 /* TimeOfDay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeOfDay.swift; sourceTree = "<group>"; };
 		0CF1103942587929C0B78085 /* CustomDurationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomDurationView.swift; sourceTree = "<group>"; };
 		0D62AA62BC6640AE6A71CE93 /* TriggerStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TriggerStore.swift; sourceTree = "<group>"; };
+		0EBF8F519E78A0AD7B447F1E /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		1423246595D0C11C18068969 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
 		1657119BD6C2AE4B52FC0646 /* SessionMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionMode.swift; sourceTree = "<group>"; };
+		1719D7F7BABE901960DE7E7D /* MenuBarViewModelScreenSaverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarViewModelScreenSaverTests.swift; sourceTree = "<group>"; };
 		1747849A6CD83223536F7F25 /* TimeRangeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeRangeTests.swift; sourceTree = "<group>"; };
 		1B787C3467606EB68A7B2E94 /* IconPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconPickerView.swift; sourceTree = "<group>"; };
 		1BE9DAB4B22640A82A201FCD /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
@@ -135,6 +149,7 @@
 		4FBB10CD7D34D9B949AF967F /* FakeScheduleObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FakeScheduleObserver.swift; sourceTree = "<group>"; };
 		5688F8984A5FD5B10F56AFAC /* FakeDownloadsMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FakeDownloadsMonitor.swift; sourceTree = "<group>"; };
 		5C653B585DF4B6B3528D243F /* CafeUpIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeUpIntents.swift; sourceTree = "<group>"; };
+		5F56B5D9D56703BCB9D3A4DF /* FakeUserIdleObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FakeUserIdleObserver.swift; sourceTree = "<group>"; };
 		5F67A8820415E19B1922B479 /* EndAtTimeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EndAtTimeView.swift; sourceTree = "<group>"; };
 		6547C3FBF48EBEB0B47B7A12 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		65ABC2EE2FE3B1D319166007 /* IconStylePreferenceStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconStylePreferenceStore.swift; sourceTree = "<group>"; };
@@ -150,10 +165,14 @@
 		8149C5EF72481F822EFB0412 /* AppPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppPicker.swift; sourceTree = "<group>"; };
 		85BAB529CFDE02F7052C376E /* CafeUpTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CafeUpTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		85C90079D6C582B1BC3DF4E8 /* InMemoryIconStyleStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InMemoryIconStyleStore.swift; sourceTree = "<group>"; };
+		8C775DF81E9158FF516E6506 /* StatusBarMenuBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBarMenuBuilder.swift; sourceTree = "<group>"; };
 		8D00B6D42F59ED9644434D80 /* Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session.swift; sourceTree = "<group>"; };
+		8F5BC4C402216EF90C1B3FAD /* MenuBarViewSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarViewSnapshotTests.swift; sourceTree = "<group>"; };
 		90BEBC30EFA72337F0D56277 /* PowerObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowerObserver.swift; sourceTree = "<group>"; };
 		939E48BAAFBF4BFBFED20E6E /* FakeClock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FakeClock.swift; sourceTree = "<group>"; };
 		94C177CF15596ABC0D07A81C /* MenuBarViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarViewModel.swift; sourceTree = "<group>"; };
+		992F6C8D08CE37798EAA2FCA /* ActiveSessionPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveSessionPanel.swift; sourceTree = "<group>"; };
+		9A8AA8ED119730602B4602C7 /* ClosureMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClosureMenuItem.swift; sourceTree = "<group>"; };
 		9EBAE91FAE6E7E1E18117D0F /* CafeUpApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeUpApp.swift; sourceTree = "<group>"; };
 		A3C2114D00F2D1BBAA2491BF /* TriggerDraft.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TriggerDraft.swift; sourceTree = "<group>"; };
 		A56F9461F6B666E1ED163CEC /* WakePolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WakePolicy.swift; sourceTree = "<group>"; };
@@ -164,14 +183,17 @@
 		B09FC3298A309B490C270E39 /* AppearanceViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearanceViewModel.swift; sourceTree = "<group>"; };
 		B3CE251C78C94D5CF495C4D2 /* MenuBarViewModelAutoStopTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarViewModelAutoStopTests.swift; sourceTree = "<group>"; };
 		B71B325249F966BC5C55FD1D /* TriggerEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TriggerEditorView.swift; sourceTree = "<group>"; };
+		B780A37CCFA19C9B7793BDC6 /* WakePolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WakePolicyTests.swift; sourceTree = "<group>"; };
 		B8CDC043B0908C111BA44DD7 /* DividedCircleGlyph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DividedCircleGlyph.swift; sourceTree = "<group>"; };
 		BD8BBE6E216D75FC5667763D /* RemainingFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemainingFormatter.swift; sourceTree = "<group>"; };
+		C1196A1AF58067EF5D62051C /* UserIdleObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserIdleObserver.swift; sourceTree = "<group>"; };
 		C2885D96EC8A24BFB573B291 /* AppearanceViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearanceViewModelTests.swift; sourceTree = "<group>"; };
 		C657C5254FB90BCF490CB9C9 /* WeekdayTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeekdayTests.swift; sourceTree = "<group>"; };
 		C75F84574131A8966246F0F1 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		CAADA5C51C29BCF012CB00B1 /* AppLifetimeWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLifetimeWatcher.swift; sourceTree = "<group>"; };
 		CD014DD9FC2DFB94C5689625 /* CafeUp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CafeUp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CD72A324C7D29ED8798764F3 /* RemainingFormatterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemainingFormatterTests.swift; sourceTree = "<group>"; };
+		CF3273882F4631F90F56820A /* ActiveSessionPanelSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveSessionPanelSnapshotTests.swift; sourceTree = "<group>"; };
 		CFC450F8644E1AE8B876DAF2 /* Trigger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Trigger.swift; sourceTree = "<group>"; };
 		D0191D4030ECAF43B83C3339 /* MenuBarIconStyleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarIconStyleTests.swift; sourceTree = "<group>"; };
 		D21EDB52AB46D2FFECAB8808 /* AppIntentBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIntentBridge.swift; sourceTree = "<group>"; };
@@ -212,6 +234,7 @@
 				69CC1BE1A64D441D6EAFCA0D /* FakePowerObserver.swift */,
 				4FBB10CD7D34D9B949AF967F /* FakeScheduleObserver.swift */,
 				41C77505CC457C22BC719876 /* FakeScheduler.swift */,
+				5F56B5D9D56703BCB9D3A4DF /* FakeUserIdleObserver.swift */,
 				85C90079D6C582B1BC3DF4E8 /* InMemoryIconStyleStore.swift */,
 				D93F9BA8561BD4F640CFD4FE /* InMemoryTriggerStore.swift */,
 			);
@@ -264,6 +287,8 @@
 		66389A6F125084146EAAF492 /* MenuBar */ = {
 			isa = PBXGroup;
 			children = (
+				992F6C8D08CE37798EAA2FCA /* ActiveSessionPanel.swift */,
+				9A8AA8ED119730602B4602C7 /* ClosureMenuItem.swift */,
 				0CF1103942587929C0B78085 /* CustomDurationView.swift */,
 				5F67A8820415E19B1922B479 /* EndAtTimeView.swift */,
 				4013C55ACC2BEE289D82450A /* MenuBarIcon.swift */,
@@ -271,6 +296,8 @@
 				94C177CF15596ABC0D07A81C /* MenuBarViewModel.swift */,
 				BD8BBE6E216D75FC5667763D /* RemainingFormatter.swift */,
 				26126BA41BCDA9B054EEB969 /* SessionPresets.swift */,
+				028EF90250CDC1FFBDFE54A2 /* StatusBarController.swift */,
+				8C775DF81E9158FF516E6506 /* StatusBarMenuBuilder.swift */,
 			);
 			path = MenuBar;
 			sourceTree = "<group>";
@@ -311,6 +338,7 @@
 				017CAFB7041C8A4E56160CDF /* ScheduleObserver.swift */,
 				2EF488E3ADA676469E79FB02 /* Scheduler.swift */,
 				0D62AA62BC6640AE6A71CE93 /* TriggerStore.swift */,
+				C1196A1AF58067EF5D62051C /* UserIdleObserver.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -327,6 +355,7 @@
 		84E1D07BD8C85386788C281A /* App */ = {
 			isa = PBXGroup;
 			children = (
+				0EBF8F519E78A0AD7B447F1E /* AppDelegate.swift */,
 				D21EDB52AB46D2FFECAB8808 /* AppIntentBridge.swift */,
 				9EBAE91FAE6E7E1E18117D0F /* CafeUpApp.swift */,
 				5C653B585DF4B6B3528D243F /* CafeUpIntents.swift */,
@@ -355,13 +384,16 @@
 		BFB0BB91965AC1428CC911B8 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				CF3273882F4631F90F56820A /* ActiveSessionPanelSnapshotTests.swift */,
 				C2885D96EC8A24BFB573B291 /* AppearanceViewModelTests.swift */,
 				1EAF1B0139BE9C5D26CCAC91 /* DownloadsMonitorTests.swift */,
 				691068D02528E968BD96FBC0 /* IconStylePreferenceStoreTests.swift */,
 				D0191D4030ECAF43B83C3339 /* MenuBarIconStyleTests.swift */,
 				B3CE251C78C94D5CF495C4D2 /* MenuBarViewModelAutoStopTests.swift */,
+				1719D7F7BABE901960DE7E7D /* MenuBarViewModelScreenSaverTests.swift */,
 				EBE476EFD7620C5AD1840390 /* MenuBarViewModelTests.swift */,
 				DB7FBE32B56A88B2ABCA6068 /* MenuBarViewModelTickerTests.swift */,
+				8F5BC4C402216EF90C1B3FAD /* MenuBarViewSnapshotTests.swift */,
 				2CE762BE73DB1023949BFE23 /* PowerSourceTests.swift */,
 				CD72A324C7D29ED8798764F3 /* RemainingFormatterTests.swift */,
 				26D08D4B3276DBFA2583BF06 /* SessionEngineTests.swift */,
@@ -374,6 +406,7 @@
 				A8CBA8977FBB9AC910BEFC0A /* TriggerEvaluationTests.swift */,
 				09D7F87B56A4FFC3B20B2FAB /* TriggersViewModelTests.swift */,
 				751CB2CFF2B219ADF766F15C /* UserDefaultsTriggerStoreTests.swift */,
+				B780A37CCFA19C9B7793BDC6 /* WakePolicyTests.swift */,
 				C657C5254FB90BCF490CB9C9 /* WeekdayTests.swift */,
 				3752D30545B1F1E4797D560B /* WorldStateTests.swift */,
 				1BCCE2209E234ED1AAB71C41 /* Fakes */,
@@ -472,6 +505,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				976254C1C1C662D5ADED3FFB /* ActiveSessionPanelSnapshotTests.swift in Sources */,
 				E1CFCECB261AD351E0C7FA93 /* AppearanceViewModelTests.swift in Sources */,
 				D0B86C02A4CD027CA771BDF6 /* DownloadsMonitorTests.swift in Sources */,
 				4A16EFFF484DF9D6F21AE0F1 /* FakeAppActivityObserver.swift in Sources */,
@@ -483,13 +517,16 @@
 				042947CAE5475D21E9DB8E95 /* FakePowerObserver.swift in Sources */,
 				9BF0C5D26D8F9642DF66C365 /* FakeScheduleObserver.swift in Sources */,
 				275EFFB0D01BF4E15F8A01D7 /* FakeScheduler.swift in Sources */,
+				734D1F1804F97148EDE94EB1 /* FakeUserIdleObserver.swift in Sources */,
 				3A4312495B474DE59BC54AD8 /* IconStylePreferenceStoreTests.swift in Sources */,
 				DDD52D821915157BB77A9BE7 /* InMemoryIconStyleStore.swift in Sources */,
 				DFAE6EBA6EB9BDD3EC5CDE81 /* InMemoryTriggerStore.swift in Sources */,
 				AE5A1B188032D29078EBA44D /* MenuBarIconStyleTests.swift in Sources */,
 				2C6AB323089166AE64174858 /* MenuBarViewModelAutoStopTests.swift in Sources */,
+				B638B3282AE2DF4852D06033 /* MenuBarViewModelScreenSaverTests.swift in Sources */,
 				DD50CD1E0883F70EEA95CD21 /* MenuBarViewModelTests.swift in Sources */,
 				CE64FAEBC4560EF1AAEFF5F8 /* MenuBarViewModelTickerTests.swift in Sources */,
+				835F32143F6D1277A44C93C9 /* MenuBarViewSnapshotTests.swift in Sources */,
 				3ECDD4E392FC857171A3AAC9 /* PowerSourceTests.swift in Sources */,
 				729AA52757BC2695259C7760 /* RemainingFormatterTests.swift in Sources */,
 				997A3CDF2AE2001E933FEED5 /* SessionEngineTests.swift in Sources */,
@@ -502,6 +539,7 @@
 				3E80E764BC56CB9C6924470B /* TriggerEvaluationTests.swift in Sources */,
 				1EDF7D16A36633DE58794753 /* TriggersViewModelTests.swift in Sources */,
 				356616F8E62FACA1731CBBBF /* UserDefaultsTriggerStoreTests.swift in Sources */,
+				3A6FCFEBD53298D1D958F6CA /* WakePolicyTests.swift in Sources */,
 				B505625184664F7FBB3CC16E /* WeekdayTests.swift in Sources */,
 				8CE81A474C2A4B6017226FE0 /* WorldStateTests.swift in Sources */,
 			);
@@ -511,7 +549,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BEB871150EE6A428D1AFEA28 /* ActiveSessionPanel.swift in Sources */,
 				CC64147CE4D569225DBB5E9F /* AppActivityObserver.swift in Sources */,
+				737018EE0DBF3E4E427AC43A /* AppDelegate.swift in Sources */,
 				58A271F7BBE5808E38732D68 /* AppIntentBridge.swift in Sources */,
 				C192C6B38A6D448470934567 /* AppLifetimeWatcher.swift in Sources */,
 				E43CF2AE7DAC67257F437F1A /* AppPicker.swift in Sources */,
@@ -519,6 +559,7 @@
 				6DB0715C63249C66FE23A6E8 /* CafeUpApp.swift in Sources */,
 				A56326CA0AAE0C146C10A48D /* CafeUpIntents.swift in Sources */,
 				D2ED23A640407835889100BB /* Clock.swift in Sources */,
+				52C9B2DC19A10CB18D9D51EA /* ClosureMenuItem.swift in Sources */,
 				6E70BBE0FB7560B6B92A6B3B /* CoffeeBeanGlyph.swift in Sources */,
 				BBA52F990EC1C7763ED18312 /* CompositionRoot.swift in Sources */,
 				06C9CB75863B43B788AF0A68 /* CustomDurationView.swift in Sources */,
@@ -546,6 +587,8 @@
 				202FB5369F40A27AE23DE29B /* SessionPresets.swift in Sources */,
 				023337315D03D5A7A11EF8A8 /* SettingsView.swift in Sources */,
 				D56BCE7A7D95C3D9990E5297 /* SolidCircleGlyph.swift in Sources */,
+				6A1E03FFAB6D9C044E9FF76E /* StatusBarController.swift in Sources */,
+				8C4C2EAFD08C31CDB267375D /* StatusBarMenuBuilder.swift in Sources */,
 				62E69CE2035CB23E3CEFDFC3 /* TimeOfDay.swift in Sources */,
 				2F91A2E0C4C8A00DFEC88FEB /* TimeRange.swift in Sources */,
 				4D69394BB042C591CF57196D /* Trigger.swift in Sources */,
@@ -556,6 +599,7 @@
 				2D5859697FEB656BD2F7112F /* TriggerStore.swift in Sources */,
 				300B16E72859C50460E34BDE /* TriggersView.swift in Sources */,
 				4C19E5B1860A156E341ADBF1 /* TriggersViewModel.swift in Sources */,
+				FC510B8A770B55256C1F4E9B /* UserIdleObserver.swift in Sources */,
 				4A73597DAAE2BAD8A3D87F02 /* WakePolicy.swift in Sources */,
 				DDD935B7695DBC2BBC51EB54 /* Weekday.swift in Sources */,
 				9DC42B1A3192373C5856CEC4 /* WindowID.swift in Sources */,

@@ -13,33 +13,49 @@ protocol PowerAssertionToken: Sendable {
 
 struct IOKitPowerAssertionService: PowerAssertionService {
     func acquire(policy: WakePolicy, reason: String) throws -> PowerAssertionToken {
-        let type: CFString = switch policy {
-        case .systemOnly:       kIOPMAssertionTypePreventUserIdleSystemSleep as CFString
-        case .systemAndDisplay: kIOPMAssertionTypePreventUserIdleDisplaySleep as CFString
+        var typesToHold: [CFString] = []
+
+        // Always hold "prevent user idle system sleep" so the Mac stays awake during the
+        // session — that's the whole point of starting one.
+        typesToHold.append(kIOPMAssertionTypePreventUserIdleSystemSleep as CFString)
+
+        if !policy.allowDisplaySleep {
+            typesToHold.append(kIOPMAssertionTypePreventUserIdleDisplaySleep as CFString)
         }
-        var id: IOPMAssertionID = 0
-        let result = IOPMAssertionCreateWithName(
-            type,
-            IOPMAssertionLevel(kIOPMAssertionLevelOn),
-            reason as CFString,
-            &id
-        )
-        guard result == kIOReturnSuccess else {
-            throw SessionError.assertionFailed(code: result)
+        if !policy.allowSystemSleepWhenLidClosed {
+            // PreventSystemSleep blocks deep sleep even with the lid closed (clamshell mode).
+            typesToHold.append(kIOPMAssertionTypePreventSystemSleep as CFString)
         }
-        return IOKitToken(id: id)
+
+        var ids: [IOPMAssertionID] = []
+        for type in typesToHold {
+            var id: IOPMAssertionID = 0
+            let result = IOPMAssertionCreateWithName(
+                type,
+                IOPMAssertionLevel(kIOPMAssertionLevelOn),
+                reason as CFString,
+                &id
+            )
+            guard result == kIOReturnSuccess else {
+                // Release any we already grabbed before throwing.
+                for prior in ids { IOPMAssertionRelease(prior) }
+                throw SessionError.assertionFailed(code: result)
+            }
+            ids.append(id)
+        }
+        return IOKitToken(ids: ids)
     }
 
     private final class IOKitToken: PowerAssertionToken, @unchecked Sendable {
-        private let id: IOPMAssertionID
+        private let ids: [IOPMAssertionID]
         private let released = OSAllocatedUnfairLock(initialState: false)
 
-        init(id: IOPMAssertionID) { self.id = id }
+        init(ids: [IOPMAssertionID]) { self.ids = ids }
 
         func release() {
             released.withLock { wasReleased in
                 guard !wasReleased else { return }
-                IOPMAssertionRelease(id)
+                for id in ids { IOPMAssertionRelease(id) }
                 wasReleased = true
             }
         }
