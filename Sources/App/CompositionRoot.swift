@@ -5,6 +5,8 @@ enum CompositionRoot {
     struct AppDependencies {
         let menuBarViewModel: MenuBarViewModel
         let triggersViewModel: TriggersViewModel
+        let appearanceViewModel: AppearanceViewModel
+        let appPicker: AppPicker
     }
 
     static func makeAppDependencies() -> AppDependencies {
@@ -29,15 +31,23 @@ enum CompositionRoot {
         triggerEngine.start()
         AppIntentBridge.shared.register(sessionEngine: sessionEngine)
 
+        let appPicker = OpenPanelAppPicker()
+
         return AppDependencies(
             menuBarViewModel: MenuBarViewModel(
                 engine: sessionEngine,
-                triggerEngine: triggerEngine
+                triggerEngine: triggerEngine,
+                appLifetimeWatcher: NSWorkspaceAppLifetimeWatcher(),
+                downloadsMonitor: FileSystemDownloadsMonitor()
             ),
             triggersViewModel: TriggersViewModel(
                 engine: triggerEngine,
-                appPicker: OpenPanelAppPicker()
-            )
+                appPicker: appPicker
+            ),
+            appearanceViewModel: AppearanceViewModel(
+                store: UserDefaultsIconStylePreferenceStore()
+            ),
+            appPicker: appPicker
         )
     }
 }

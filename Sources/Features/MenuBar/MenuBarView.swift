@@ -1,116 +1,155 @@
+import AppKit
 import SwiftUI
 
 struct MenuBarView: View {
     @Bindable var viewModel: MenuBarViewModel
-    let presets: [SessionPreset]
-    let openTriggers: @MainActor () -> Void
+    let openSettings: @MainActor () -> Void
+    let openCustomDuration: @MainActor () -> Void
+    let openEndAtTime: @MainActor () -> Void
+    let pickApplication: @MainActor () -> PickedApplication?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            statusSection
+        Group {
+            if viewModel.isManualSessionActive, let session = viewModel.session {
+                currentSessionSection(session: session)
+                Divider()
+            } else if viewModel.isTriggerActive {
+                triggerOnlySection
+                Divider()
+            }
+
+            startNewSessionSection
+
             Divider()
-            actionsSection
+
+            quickSettingsMenu
+            Button("Settings…") { openSettings() }
+                .keyboardShortcut(",", modifiers: .command)
+
             Divider()
-            settingsSection
+
+            Button("About CafeUp") {
+                NSApp.activate(ignoringOtherApps: true)
+                NSApp.orderFrontStandardAboutPanel(nil)
+            }
+            feedbackMenu
+
             Divider()
-            footerSection
+
+            Button("Quit CafeUp") { NSApp.terminate(nil) }
+                .keyboardShortcut("q", modifiers: .command)
         }
-        .padding(.vertical, 6)
-        .frame(width: 280)
     }
 
-    private var statusSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            SessionStatusView(
-                session: viewModel.session,
-                isTriggerActive: viewModel.isTriggerActive,
-                activeTriggerCount: viewModel.activeTriggerCount
-            )
-            .font(.callout)
+    @ViewBuilder
+    private func currentSessionSection(session: Session) -> some View {
+        Section("Current Session Details:") {
+            LiveSessionStatusLine(viewModel: viewModel)
+            Text(activationLabel)
+            allowDisplaySleepToggle
+            Button("End Current Session") { viewModel.stop() }
+                .keyboardShortcut("x", modifiers: .command)
+        }
+    }
 
-            if viewModel.isManualSessionActive {
-                Button {
-                    viewModel.stop()
-                } label: {
-                    Label("Stop", systemImage: "stop.fill")
-                        .frame(maxWidth: .infinity)
+    private var triggerOnlySection: some View {
+        Section("Current Session Details:") {
+            let count = viewModel.activeTriggerCount
+            let suffix = count == 1 ? "trigger" : "triggers"
+            Text("Awake — \(count) \(suffix) active")
+            Text("Triggered Activation")
+        }
+    }
+
+    private var startNewSessionSection: some View {
+        Section("Start New Session:") {
+            Button("Indefinitely") { viewModel.startIndefinite() }
+                .keyboardShortcut("i", modifiers: .command)
+
+            Menu("Minutes") {
+                ForEach(SessionPreset.minutePresets) { preset in
+                    Button(preset.label) { viewModel.start(duration: preset.duration) }
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.small)
-            }
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-    }
-
-    private var actionsSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            MenuRowButton(label: "Keep awake indefinitely", systemImage: "infinity") {
-                viewModel.startIndefinite()
             }
 
-            Text("Or for…")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            Menu("Hours") {
+                ForEach(SessionPreset.hourPresets) { preset in
+                    Button(preset.label) { viewModel.start(duration: preset.duration) }
+                }
+            }
 
-            LazyVGrid(
-                columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: 3),
-                spacing: 6
-            ) {
-                ForEach(presets) { preset in
-                    Button {
-                        viewModel.start(duration: preset.duration)
-                    } label: {
-                        Text(preset.label)
-                            .frame(maxWidth: .infinity)
+            Menu("Other Time/Until") {
+                Button("Custom Duration…") { openCustomDuration() }
+                Button("End at Time…") { openEndAtTime() }
+            }
+
+            Menu("While App is Running") {
+                let apps = RunningApplicationsSnapshot.currentRegularApps()
+                if apps.isEmpty {
+                    Text("No other apps running")
+                } else {
+                    ForEach(apps.prefix(15), id: \.id) { entry in
+                        Button(entry.name) {
+                            viewModel.startWhileAppRunning(bundleIdentifier: entry.id)
+                        }
                     }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
+                }
+                Divider()
+                Button("Choose Application…") {
+                    if let picked = pickApplication() {
+                        viewModel.startWhileAppRunning(bundleIdentifier: picked.bundleIdentifier)
+                    }
                 }
             }
+
+            Button("While File is Downloading…") { viewModel.startWhileDownloading() }
+                .keyboardShortcut("f", modifiers: .command)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
     }
 
-    private var settingsSection: some View {
-        Toggle("Prevent display sleep", isOn: Binding(
-            get: { viewModel.policy == .systemAndDisplay },
-            set: { viewModel.policy = $0 ? .systemAndDisplay : .systemOnly }
-        ))
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+    private var quickSettingsMenu: some View {
+        Menu("Quick Settings") {
+            allowDisplaySleepToggle
+        }
     }
 
-    private var footerSection: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            MenuRowButton(label: "Triggers…", systemImage: "bolt", action: openTriggers)
-            MenuRowButton(label: "Quit CafeUp", systemImage: "power") {
-                NSApp.terminate(nil)
+    private var feedbackMenu: some View {
+        Menu("Feedback & Support") {
+            Button("Report an Issue") {
+                openURL("https://github.com/pthokala/CafeUp/issues/new")
             }
-            .keyboardShortcut("q")
+            Button("Project Page") {
+                openURL("https://github.com/pthokala/CafeUp")
+            }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 4)
     }
+
+    private func openURL(_ string: String) {
+        guard let url = URL(string: string) else { return }
+        NSWorkspace.shared.open(url)
+    }
+
+    private var allowDisplaySleepToggle: some View {
+        Toggle("Allow display sleep", isOn: Binding(
+            get: { viewModel.policy == .systemOnly },
+            set: { viewModel.policy = $0 ? .systemOnly : .systemAndDisplay }
+        ))
+    }
+
+    private var activationLabel: String {
+        viewModel.isTriggerActive ? "Manual + Triggered Activation" : "Manual Activation"
+    }
+
 }
 
-private struct MenuRowButton: View {
-    let label: String
-    let systemImage: String
-    let action: @MainActor () -> Void
+/// Isolated subview so the per-second `tick` only re-renders this row, not the whole menu —
+/// otherwise NSMenu hover tracking gets reset every second.
+private struct LiveSessionStatusLine: View {
+    let viewModel: MenuBarViewModel
 
     var body: some View {
-        Button(action: action) {
-            HStack {
-                Image(systemName: systemImage)
-                    .frame(width: 16)
-                Text(label)
-                Spacer()
-            }
-            .contentShape(Rectangle())
+        if let line = viewModel.sessionStatusLine() {
+            Text(line)
         }
-        .buttonStyle(.plain)
-        .padding(.vertical, 4)
     }
 }

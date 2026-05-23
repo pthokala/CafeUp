@@ -9,26 +9,45 @@ struct CafeUpApp: App {
         MenuBarExtra {
             MenuBarView(
                 viewModel: deps.menuBarViewModel,
-                presets: SessionPreset.standard,
-                openTriggers: openTriggersWindow
+                openSettings: { openWindowAndActivate(id: WindowID.settings) },
+                openCustomDuration: { openWindowAndActivate(id: WindowID.customDuration) },
+                openEndAtTime: { openWindowAndActivate(id: WindowID.endAtTime) },
+                pickApplication: { deps.appPicker.pickApplication() }
             )
         } label: {
-            MenuBarIcon(isActive: deps.menuBarViewModel.isActive)
+            MenuBarIcon(
+                style: deps.appearanceViewModel.iconStyle,
+                isActive: deps.menuBarViewModel.isActive
+            )
         }
-        .menuBarExtraStyle(.window)
+        .menuBarExtraStyle(.menu)
 
-        Window("Triggers", id: WindowID.triggers) {
-            TriggersView(viewModel: deps.triggersViewModel)
+        Window("Settings", id: WindowID.settings) {
+            SettingsView(
+                menuBarViewModel: deps.menuBarViewModel,
+                appearanceViewModel: deps.appearanceViewModel,
+                triggersViewModel: deps.triggersViewModel
+            )
+        }
+        .windowResizability(.contentSize)
+
+        Window("Custom Duration", id: WindowID.customDuration) {
+            CustomDurationView { duration in
+                deps.menuBarViewModel.start(duration: duration)
+            }
+        }
+        .windowResizability(.contentSize)
+
+        Window("End at Time", id: WindowID.endAtTime) {
+            EndAtTimeView { endDate in
+                deps.menuBarViewModel.startUntil(endDate)
+            }
         }
         .windowResizability(.contentSize)
     }
 
-    private func openTriggersWindow() {
-        openWindow(id: WindowID.triggers)
+    private func openWindowAndActivate(id: String) {
+        openWindow(id: id)
         NSApp.activate(ignoringOtherApps: true)
     }
-}
-
-private enum WindowID {
-    static let triggers = "triggers"
 }
