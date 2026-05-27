@@ -163,10 +163,12 @@ private struct CheckboxRow: View {
     @ViewBuilder
     private var checkbox: some View {
         ZStack {
+            // Off-white (rather than pure white) so the empty checkbox reads
+            // light against the dark menu background without feeling harsh.
             RoundedRectangle(cornerRadius: 3.5, style: .continuous)
-                .fill(isOn ? Color.accentColor : Color(nsColor: .controlBackgroundColor))
+                .fill(isOn ? Color.accentColor : Color(red: 0.93, green: 0.93, blue: 0.91))
             RoundedRectangle(cornerRadius: 3.5, style: .continuous)
-                .strokeBorder(Color.primary.opacity(isOn ? 0 : 0.35), lineWidth: 1)
+                .strokeBorder(Color.black.opacity(isOn ? 0 : 0.25), lineWidth: 0.5)
             if isOn {
                 Image(systemName: "checkmark")
                     .font(.system(size: 9, weight: .bold))

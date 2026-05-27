@@ -98,7 +98,10 @@ final class StatusBarController: NSObject, NSMenuDelegate {
                 pickApplication: pickApplication,
                 openSettings: openSettings,
                 openCustomDuration: openCustomDuration,
-                openEndAtTime: openEndAtTime
+                openEndAtTime: openEndAtTime,
+                dismissMenu: { [weak self] in
+                    self?.statusItem.menu?.cancelTracking()
+                }
             )
             let fresh = builder.buildMenu()
             for item in fresh.items {

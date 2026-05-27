@@ -85,7 +85,8 @@ final class ActiveSessionPanelSnapshotTests: XCTestCase {
             assertions: FakePowerAssertionService(),
             clock: SystemClock(),
             scheduler: FakeScheduler(),
-            logger: SilentLogger()
+            logger: SilentLogger(),
+            alertSounds: FakeSessionAlertSounds()
         )
         let triggerEngine = TriggerEngine(
             assertions: FakePowerAssertionService(),

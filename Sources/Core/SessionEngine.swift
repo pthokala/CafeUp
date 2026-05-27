@@ -13,17 +13,20 @@ final class SessionEngine {
     @ObservationIgnored private let clock: Clock
     @ObservationIgnored private let scheduler: Scheduler
     @ObservationIgnored private let logger: AppLogger
+    @ObservationIgnored private let alertSounds: SessionAlertSounds
 
     init(
         assertions: PowerAssertionService,
         clock: Clock,
         scheduler: Scheduler,
-        logger: AppLogger
+        logger: AppLogger,
+        alertSounds: SessionAlertSounds
     ) {
         self.assertions = assertions
         self.clock = clock
         self.scheduler = scheduler
         self.logger = logger
+        self.alertSounds = alertSounds
     }
 
     var isActive: Bool { current != nil }
@@ -40,6 +43,7 @@ final class SessionEngine {
         token = nil
         current = nil
         logger.info("Session stopped")
+        alertSounds.playSessionEnd()
     }
 
     func updatePolicy(_ policy: WakePolicy) throws {
@@ -75,6 +79,10 @@ final class SessionEngine {
             "Session started: mode=\(String(describing: mode)) policy=\(policy) "
             + "startedAt=\(startedAt) endsAt=\(endsAt.map(String.init(describing:)) ?? "nil")"
         )
+
+        if previous == nil {
+            alertSounds.playSessionStart()
+        }
     }
 
     private func endDate(for mode: SessionMode, startingAt start: Date) -> Date? {
