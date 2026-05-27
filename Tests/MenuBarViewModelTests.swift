@@ -155,7 +155,8 @@ final class MenuBarViewModelTests: XCTestCase {
             assertions: sessionAssertions,
             clock: FakeClock(),
             scheduler: FakeScheduler(),
-            logger: SilentLogger()
+            logger: SilentLogger(),
+            alertSounds: FakeSessionAlertSounds()
         )
         let triggerEngine = TriggerEngine(
             assertions: triggerAssertions,

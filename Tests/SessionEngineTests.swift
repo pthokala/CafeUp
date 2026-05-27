@@ -73,6 +73,61 @@ final class SessionEngineTests: XCTestCase {
         XCTAssertNil(engine.current)
     }
 
+    func test_start_playsStartSoundOnce() throws {
+        let (engine, fakes) = makeSUT()
+
+        try engine.start(mode: .indefinite, policy: .systemOnly)
+
+        XCTAssertEqual(fakes.alertSounds.startPlayCount, 1)
+        XCTAssertEqual(fakes.alertSounds.endPlayCount, 0)
+    }
+
+    func test_stop_playsEndSoundOnce() throws {
+        let (engine, fakes) = makeSUT()
+
+        try engine.start(mode: .indefinite, policy: .systemOnly)
+        engine.stop()
+
+        XCTAssertEqual(fakes.alertSounds.endPlayCount, 1)
+    }
+
+    func test_stopWithoutSession_doesNotPlay() {
+        let (engine, fakes) = makeSUT()
+
+        engine.stop()
+
+        XCTAssertEqual(fakes.alertSounds.endPlayCount, 0)
+    }
+
+    func test_updatePolicy_doesNotReplayStartSound() throws {
+        let (engine, fakes) = makeSUT()
+
+        try engine.start(mode: .timed(.seconds(60)), policy: .systemOnly)
+        try engine.updatePolicy(.systemAndDisplay)
+
+        XCTAssertEqual(fakes.alertSounds.startPlayCount, 1)
+        XCTAssertEqual(fakes.alertSounds.endPlayCount, 0)
+    }
+
+    func test_startFailure_doesNotPlayStartSound() {
+        let (engine, fakes) = makeSUT()
+        fakes.assertions.failure = .assertionFailed(code: -1)
+
+        XCTAssertThrowsError(try engine.start(mode: .indefinite, policy: .systemOnly))
+
+        XCTAssertEqual(fakes.alertSounds.startPlayCount, 0)
+    }
+
+    func test_timedAutoStop_playsEndSound() async throws {
+        let (engine, fakes) = makeSUT()
+
+        try engine.start(mode: .timed(.seconds(60)), policy: .systemOnly)
+        fakes.scheduler.fireAll()
+        await Task.yield()
+
+        XCTAssertEqual(fakes.alertSounds.endPlayCount, 1)
+    }
+
     func test_reacquireFailure_preservesExistingSession() throws {
         let (engine, fakes) = makeSUT()
 
@@ -91,19 +146,22 @@ final class SessionEngineTests: XCTestCase {
         let assertions: FakePowerAssertionService
         let clock: FakeClock
         let scheduler: FakeScheduler
+        let alertSounds: FakeSessionAlertSounds
     }
 
     private func makeSUT() -> (SessionEngine, Fakes) {
         let fakes = Fakes(
             assertions: FakePowerAssertionService(),
             clock: FakeClock(),
-            scheduler: FakeScheduler()
+            scheduler: FakeScheduler(),
+            alertSounds: FakeSessionAlertSounds()
         )
         let engine = SessionEngine(
             assertions: fakes.assertions,
             clock: fakes.clock,
             scheduler: fakes.scheduler,
-            logger: SilentLogger()
+            logger: SilentLogger(),
+            alertSounds: fakes.alertSounds
         )
         return (engine, fakes)
     }

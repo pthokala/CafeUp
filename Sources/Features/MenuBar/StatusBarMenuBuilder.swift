@@ -9,6 +9,7 @@ struct StatusBarMenuBuilder {
     let openSettings: () -> Void
     let openCustomDuration: () -> Void
     let openEndAtTime: () -> Void
+    let dismissMenu: () -> Void
 
     func buildMenu() -> NSMenu {
         let menu = NSMenu()
@@ -61,8 +62,9 @@ struct StatusBarMenuBuilder {
 
     private func activeSessionItem() -> NSMenuItem {
         let item = NSMenuItem()
-        let panel = ActiveSessionPanel(viewModel: viewModel, onEnd: { [viewModel] in
+        let panel = ActiveSessionPanel(viewModel: viewModel, onEnd: { [viewModel, dismissMenu] in
             viewModel.stop()
+            dismissMenu()
         })
         let host = NSHostingView(rootView: panel)
         host.translatesAutoresizingMaskIntoConstraints = true

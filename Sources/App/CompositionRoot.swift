@@ -19,7 +19,8 @@ enum CompositionRoot {
             assertions: assertions,
             clock: clock,
             scheduler: TaskScheduler(),
-            logger: OSAppLogger(category: "session")
+            logger: OSAppLogger(category: "session"),
+            alertSounds: SystemSessionAlertSounds()
         )
 
         let triggerEngine = TriggerEngine(

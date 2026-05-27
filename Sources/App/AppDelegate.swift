@@ -26,6 +26,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
     }
 
+    /// Gracefully end any active session before the process exits so that
+    /// session-end callbacks (sounds, observers) fire and watchers shut down
+    /// cleanly. IOKit assertions would be released by the kernel either way.
+    func applicationWillTerminate(_ notification: Notification) {
+        deps.menuBarViewModel.stop()
+    }
+
     private func openAndActivate(_ id: String) {
         openWindow?(id)
         NSApp.activate(ignoringOtherApps: true)

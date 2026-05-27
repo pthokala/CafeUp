@@ -127,7 +127,8 @@ final class MenuBarViewModelTickerTests: XCTestCase {
             assertions: FakePowerAssertionService(),
             clock: FakeClock(),
             scheduler: FakeScheduler(),
-            logger: SilentLogger()
+            logger: SilentLogger(),
+            alertSounds: FakeSessionAlertSounds()
         )
         let triggerEngine = TriggerEngine(
             assertions: FakePowerAssertionService(),
