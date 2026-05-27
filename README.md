@@ -34,6 +34,65 @@ Two built-in App Intents, usable from the Shortcuts app, Spotlight, or Siri:
 - **Start CafeUp Session** — optional duration parameter (1–1440 minutes); omit for indefinite. Phrases: *"Start a CafeUp session"*, *"Keep my Mac awake with CafeUp"*.
 - **Stop CafeUp Session** — *"Stop CafeUp session"*, *"Let my Mac sleep with CafeUp"*.
 
+### Scripting & agents
+
+CafeUp exposes two zero-overhead surfaces so other programs (CLI scripts, AI
+agents, automation tools) can control it without polling, daemons, or extra
+sockets.
+
+**URL scheme** — every command works as a `cafeup://…` URL dispatched via
+`open`:
+
+```
+cafeup://start                                          # indefinite
+cafeup://start?minutes=30                               # timed (1–1440)
+cafeup://stop
+cafeup://policy?display=true&lidClosed=false&screensaver=true
+```
+
+The app launches itself if it isn't already running. URL dispatch is
+fire-and-forget and uses LaunchServices — no listening sockets, no extra
+processes.
+
+**`cafeup` CLI** — a small shell wrapper bundled inside the app. Install once:
+
+```bash
+sudo ln -sf "/Applications/CafeUp.app/Contents/Resources/cafeup" /usr/local/bin/cafeup
+```
+
+Then:
+
+```
+cafeup start [--minutes N]                  # omit --minutes for indefinite
+cafeup stop
+cafeup policy [--display=BOOL] [--lid-closed=BOOL] [--screensaver=BOOL]
+cafeup status [--json]                      # read current state
+```
+
+`BOOL` accepts `true|false|yes|no|1|0` (case-insensitive).
+
+**Status JSON** — CafeUp writes its current state to
+`~/Library/Application Support/CafeUp/status.json` whenever the session or
+policy changes (no polling, no rewrites between changes):
+
+```json
+{
+  "active": true,
+  "mode": "timed",
+  "startedAt": "2026-05-28T10:00:00Z",
+  "endsAt":    "2026-05-28T10:30:00Z",
+  "policy": {
+    "allowDisplaySleep": false,
+    "allowSystemSleepWhenLidClosed": true,
+    "allowScreenSaverAfter45Min": false
+  },
+  "updatedAt": "2026-05-28T10:00:00Z"
+}
+```
+
+Agents compute live remaining time as `endsAt − now` themselves; the file
+doesn't need a second-by-second rewrite.
+
 ### Appearance
 13 menu-bar icon styles (Coffee Cup, Steaming Cup, Mug, Takeout Cup, Coffee Bean, Divided Disc, Divided Circle, Dot, Circle, Pill, Bolt, Eye, Sun). Active and idle variants render distinctly.
 
