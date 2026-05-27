@@ -1,0 +1,302 @@
+#!/bin/bash
+#
+# cafeup — control the CafeUp menu-bar app from the shell.
+#
+# Commands `start`, `stop`, and `policy` are translated into `cafeup://…`
+# URLs and dispatched via `open`, which routes them to the running app
+# (launching it if needed). `status` reads the JSON file the app maintains
+# at ~/Library/Application Support/CafeUp/status.json — no IPC, no launch.
+#
+# Exit codes:
+#   0   success
+#   1   bad usage (missing/invalid arguments, unknown subcommand)
+#   2   runtime failure (open failed, status file missing for `status`)
+#
+# Install:
+#   sudo ln -sf "/Applications/CafeUp.app/Contents/Resources/cafeup" \
+#       /usr/local/bin/cafeup
+#
+set -euo pipefail
+
+readonly STATUS_FILE="$HOME/Library/Application Support/CafeUp/status.json"
+readonly URL_SCHEME="cafeup"
+
+# ---------------------------------------------------------------------------
+# Output helpers
+# ---------------------------------------------------------------------------
+
+err()  { printf 'cafeup: %s\n' "$*" >&2; }
+die()  { err "$*"; exit 1; }
+die2() { err "$*"; exit 2; }
+
+usage() {
+  cat >&2 <<'EOF'
+Usage: cafeup <command> [options]
+
+Commands:
+  start [--minutes N]            Start a session. Omit --minutes for indefinite.
+                                 N must be in 1..1440.
+  stop                           End the current session.
+  policy [--display=BOOL]        Update the wake policy. At least one flag required.
+         [--lid-closed=BOOL]
+         [--screensaver=BOOL]    BOOL: true|false|yes|no|1|0 (case-insensitive)
+  status [--json]                Print current state. Default: human-readable.
+
+Examples:
+  cafeup start --minutes 30
+  cafeup stop
+  cafeup policy --display=false --screensaver=true
+  cafeup status --json | jq .
+
+The status file lives at:
+  ~/Library/Application Support/CafeUp/status.json
+EOF
+}
+
+# ---------------------------------------------------------------------------
+# Parsing helpers
+# ---------------------------------------------------------------------------
+
+# normalize_bool VALUE → echoes 'true' or 'false', or returns nonzero.
+normalize_bool() {
+  local v
+  v="$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')"
+  case "$v" in
+    true|yes|1)  printf 'true'  ;;
+    false|no|0)  printf 'false' ;;
+    *) return 1 ;;
+  esac
+}
+
+# Validate integer string in [1, 1440]; echo on success, return nonzero otherwise.
+validate_minutes() {
+  local v="$1"
+  if ! [[ "$v" =~ ^-?[0-9]+$ ]]; then
+    return 1
+  fi
+  if (( v < 1 || v > 1440 )); then
+    return 2
+  fi
+  printf '%s' "$v"
+}
+
+# url_encode VALUE → percent-encodes a query value (limited to chars we emit).
+# We only ever pass digits and 'true'/'false', so a simple passthrough is fine,
+# but encode defensively in case future values change.
+url_encode() {
+  local s="$1" out="" c i
+  for (( i=0; i<${#s}; i++ )); do
+    c="${s:i:1}"
+    case "$c" in
+      [a-zA-Z0-9._~-]) out+="$c" ;;
+      *) out+=$(printf '%%%02X' "'$c") ;;
+    esac
+  done
+  printf '%s' "$out"
+}
+
+# open_url URL → dispatches via /usr/bin/open. Surfaces failure clearly.
+open_url() {
+  local url="$1"
+  if ! /usr/bin/open "$url" 2>/dev/null; then
+    die2 "failed to dispatch '$url' (is CafeUp installed?)"
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# Subcommands
+# ---------------------------------------------------------------------------
+
+cmd_start() {
+  local minutes=""
+  while (( $# )); do
+    case "$1" in
+      --minutes)
+        [[ $# -ge 2 ]] || die "--minutes requires a value"
+        minutes="$2"; shift 2
+        ;;
+      --minutes=*)
+        minutes="${1#--minutes=}"; shift
+        ;;
+      -h|--help)
+        usage; exit 0
+        ;;
+      *)
+        die "unknown option for start: $1"
+        ;;
+    esac
+  done
+
+  if [[ -z "$minutes" ]]; then
+    open_url "${URL_SCHEME}://start"
+    return
+  fi
+
+  # Capture exit status via `|| rc=$?` because $? inside `if !` is always 0
+  # — the `!` inverts the test, so the case below would never match.
+  local validated="" rc=0
+  validated="$(validate_minutes "$minutes")" || rc=$?
+  case "$rc" in
+    0) : ;;
+    1) die "--minutes must be an integer, got '$minutes'" ;;
+    2) die "--minutes must be in 1..1440, got '$minutes'" ;;
+    *) die "--minutes: unexpected validation failure ($rc)" ;;
+  esac
+  open_url "${URL_SCHEME}://start?minutes=$(url_encode "$validated")"
+}
+
+cmd_stop() {
+  while (( $# )); do
+    case "$1" in
+      -h|--help) usage; exit 0 ;;
+      *) die "unknown option for stop: $1" ;;
+    esac
+  done
+  open_url "${URL_SCHEME}://stop"
+}
+
+cmd_policy() {
+  local display="" lid="" saver=""
+  while (( $# )); do
+    case "$1" in
+      --display=*)      display="${1#--display=}"; shift ;;
+      --display)
+        [[ $# -ge 2 ]] || die "--display requires a value"
+        display="$2"; shift 2
+        ;;
+      --lid-closed=*)   lid="${1#--lid-closed=}"; shift ;;
+      --lid-closed)
+        [[ $# -ge 2 ]] || die "--lid-closed requires a value"
+        lid="$2"; shift 2
+        ;;
+      --screensaver=*)  saver="${1#--screensaver=}"; shift ;;
+      --screensaver)
+        [[ $# -ge 2 ]] || die "--screensaver requires a value"
+        saver="$2"; shift 2
+        ;;
+      -h|--help) usage; exit 0 ;;
+      *) die "unknown option for policy: $1" ;;
+    esac
+  done
+
+  local parts=() v
+  if [[ -n "$display" ]]; then
+    v="$(normalize_bool "$display")" || die "--display: expected true|false|yes|no|1|0, got '$display'"
+    parts+=("display=$(url_encode "$v")")
+  fi
+  if [[ -n "$lid" ]]; then
+    v="$(normalize_bool "$lid")" || die "--lid-closed: expected true|false|yes|no|1|0, got '$lid'"
+    parts+=("lidClosed=$(url_encode "$v")")
+  fi
+  if [[ -n "$saver" ]]; then
+    v="$(normalize_bool "$saver")" || die "--screensaver: expected true|false|yes|no|1|0, got '$saver'"
+    parts+=("screensaver=$(url_encode "$v")")
+  fi
+
+  (( ${#parts[@]} > 0 )) || die "policy needs at least one of --display, --lid-closed, --screensaver"
+
+  local query
+  query="$(IFS='&'; printf '%s' "${parts[*]}")"
+  open_url "${URL_SCHEME}://policy?${query}"
+}
+
+cmd_status() {
+  local json=false
+  while (( $# )); do
+    case "$1" in
+      --json) json=true; shift ;;
+      -h|--help) usage; exit 0 ;;
+      *) die "unknown option for status: $1" ;;
+    esac
+  done
+
+  if [[ ! -f "$STATUS_FILE" ]]; then
+    # The app hasn't written the file yet — surface a clear default so agents
+    # don't need to special-case the missing-file path.
+    if $json; then
+      printf '{"active":false,"note":"CafeUp has not written status.json yet"}\n'
+    else
+      printf 'CafeUp status: unknown (status.json not found at %s)\n' "$STATUS_FILE"
+    fi
+    exit 2
+  fi
+
+  if $json; then
+    cat "$STATUS_FILE"
+    return
+  fi
+
+  # Human-readable form. Parse with a small python helper so we don't depend
+  # on jq being installed. Python 3 ships with macOS Xcode CLT.
+  if ! command -v /usr/bin/python3 >/dev/null 2>&1 && ! command -v python3 >/dev/null 2>&1; then
+    # Fall back to dumping JSON.
+    cat "$STATUS_FILE"
+    return
+  fi
+
+  local py
+  if command -v /usr/bin/python3 >/dev/null 2>&1; then
+    py="/usr/bin/python3"
+  else
+    py="$(command -v python3)"
+  fi
+
+  "$py" - "$STATUS_FILE" <<'PY'
+import json, sys, datetime
+path = sys.argv[1]
+with open(path, "r") as f:
+    data = json.load(f)
+
+active = data.get("active", False)
+print(f"active: {active}")
+if active:
+    print(f"mode:      {data.get('mode', '?')}")
+    print(f"startedAt: {data.get('startedAt', '?')}")
+    ends = data.get("endsAt")
+    if ends:
+        try:
+            end_dt = datetime.datetime.fromisoformat(ends.replace("Z", "+00:00"))
+            now = datetime.datetime.now(datetime.timezone.utc)
+            remaining = int((end_dt - now).total_seconds())
+            if remaining > 0:
+                m, s = divmod(remaining, 60)
+                h, m = divmod(m, 60)
+                if h:
+                    print(f"endsAt:    {ends}  ({h}h {m:02d}m remaining)")
+                else:
+                    print(f"endsAt:    {ends}  ({m}m {s:02d}s remaining)")
+            else:
+                print(f"endsAt:    {ends}  (expired)")
+        except Exception:
+            print(f"endsAt:    {ends}")
+    else:
+        print("endsAt:    (indefinite)")
+
+policy = data.get("policy", {})
+print("policy:")
+print(f"  allowDisplaySleep:             {policy.get('allowDisplaySleep')}")
+print(f"  allowSystemSleepWhenLidClosed: {policy.get('allowSystemSleepWhenLidClosed')}")
+print(f"  allowScreenSaverAfter45Min:    {policy.get('allowScreenSaverAfter45Min')}")
+print(f"updatedAt: {data.get('updatedAt', '?')}")
+PY
+}
+
+# ---------------------------------------------------------------------------
+# Entry point
+# ---------------------------------------------------------------------------
+
+main() {
+  if (( $# < 1 )); then
+    usage; exit 1
+  fi
+  case "$1" in
+    start)   shift; cmd_start  "$@" ;;
+    stop)    shift; cmd_stop   "$@" ;;
+    policy)  shift; cmd_policy "$@" ;;
+    status)  shift; cmd_status "$@" ;;
+    -h|--help|help) usage; exit 0 ;;
+    *) err "unknown command: $1"; usage; exit 1 ;;
+  esac
+}
+
+main "$@"

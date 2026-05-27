@@ -9,6 +9,7 @@ enum CompositionRoot {
         let updatesViewModel: UpdatesSectionViewModel
         let updaterService: UpdaterService
         let appPicker: AppPicker
+        let statusFilePublisher: StatusFilePublisher
     }
 
     static func makeAppDependencies() -> AppDependencies {
@@ -32,19 +33,45 @@ enum CompositionRoot {
             logger: OSAppLogger(category: "triggers")
         )
         triggerEngine.start()
-        AppIntentBridge.shared.register(sessionEngine: sessionEngine)
 
         let appPicker = OpenPanelAppPicker()
         let updaterService = SparkleUpdaterService()
 
+        let menuBarViewModel = MenuBarViewModel(
+            engine: sessionEngine,
+            triggerEngine: triggerEngine,
+            appLifetimeWatcher: NSWorkspaceAppLifetimeWatcher(),
+            downloadsMonitor: FileSystemDownloadsMonitor(),
+            idleObserver: CGEventSourceIdleObserver()
+        )
+
+        // The bridge needs the view model (not just the engine) so agent commands
+        // pick up auto-stopper cancellation, the ticker, and the idle observer.
+        AppIntentBridge.shared.register(
+            lifecycle: menuBarViewModel,
+            policyMutator: menuBarViewModel
+        )
+
+        // Status JSON file: agents read this for state queries. The snapshot
+        // closure reads `sessionEngine.current` and `menuBarViewModel.policy`
+        // — both `@Observable`, so writes happen exactly when those change.
+        let statusWriter = FileSystemStatusWriter(
+            fileURL: FileSystemStatusWriter.defaultFileURL(),
+            logger: OSAppLogger(category: "status")
+        )
+        let statusFilePublisher = StatusFilePublisher(
+            snapshot: { [weak sessionEngine, weak menuBarViewModel] in
+                StatusSnapshot.make(
+                    session: sessionEngine?.current,
+                    savedPolicy: menuBarViewModel?.policy ?? .default,
+                    now: clock.now
+                )
+            },
+            writer: statusWriter
+        )
+
         return AppDependencies(
-            menuBarViewModel: MenuBarViewModel(
-                engine: sessionEngine,
-                triggerEngine: triggerEngine,
-                appLifetimeWatcher: NSWorkspaceAppLifetimeWatcher(),
-                downloadsMonitor: FileSystemDownloadsMonitor(),
-                idleObserver: CGEventSourceIdleObserver()
-            ),
+            menuBarViewModel: menuBarViewModel,
             triggersViewModel: TriggersViewModel(
                 engine: triggerEngine,
                 appPicker: appPicker
@@ -54,7 +81,8 @@ enum CompositionRoot {
             ),
             updatesViewModel: UpdatesSectionViewModel(updater: updaterService),
             updaterService: updaterService,
-            appPicker: appPicker
+            appPicker: appPicker,
+            statusFilePublisher: statusFilePublisher
         )
     }
 }

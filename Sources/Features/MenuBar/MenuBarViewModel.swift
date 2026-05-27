@@ -201,3 +201,12 @@ final class MenuBarViewModel {
         }
     }
 }
+
+// MARK: - Agent IPC conformances
+//
+// These let `AppIntentBridge` drive the view model via small protocols so
+// agent commands (URL scheme, CLI, Shortcuts) go through the same code path
+// as menu-initiated commands — including auto-stopper cancellation, ticker
+// scheduling, and idle-observer refresh.
+extension MenuBarViewModel: SessionLifecycle {}
+extension MenuBarViewModel: PolicyMutator {}

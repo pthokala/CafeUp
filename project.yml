@@ -28,6 +28,14 @@ targets:
       - path: Sources
         excludes:
           - "Resources/CafeUp.entitlements"
+          - "Resources/cafeup"
+      # Shell script CLI bundled at CafeUp.app/Contents/Resources/cafeup.
+      # Listed explicitly because xcodegen doesn't auto-classify extensionless files,
+      # so without this it ends up as an orphan file reference with no build phase
+      # and never gets copied into the bundle.
+      - path: Sources/Resources/cafeup
+        buildPhase: resources
+        type: text.script.sh
     dependencies:
       - package: Sparkle
     info:
@@ -44,6 +52,10 @@ targets:
         SUPublicEDKey: "OAE6wYuiNNZdDgvz4bl+mpQPYZc4nJvXPy08RmB2WwU="
         SUEnableAutomaticChecks: false
         SUAllowsAutomaticUpdates: false
+        CFBundleURLTypes:
+          - CFBundleURLName: com.pardhu.CafeUp.command
+            CFBundleURLSchemes:
+              - cafeup
     entitlements:
       path: Sources/Resources/CafeUp.entitlements
       properties:
