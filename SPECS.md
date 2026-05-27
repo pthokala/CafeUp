@@ -26,6 +26,7 @@ Comprehensive specification of CafeUp's user-facing behavior, internal architect
 18. [Backward compatibility & migration](#18-backward-compatibility--migration)
 19. [Known limitations & non-goals](#19-known-limitations--non-goals)
 20. [Update system](#20-update-system)
+    - 20.1 [Open: appcast hosting](#201-open-appcast-hosting) ⚠️
 
 ---
 
@@ -900,3 +901,29 @@ Without a real Developer ID + Pages site you can still test the UI:
 - **Delta updates** — `generate_appcast`'s binary-delta generation; bundle is currently too small for meaningful bandwidth savings.
 - **Signed feeds** (`SURequireSignedFeed`) — extra defense for the appcast XML; worth adding once we're shipping at scale.
 - **Custom Sparkle UI** — Sparkle's stock dialog is well-localized and accessible; no reason to roll our own.
+
+## 20.1 Open: appcast hosting
+
+`SUFeedURL` is configured to `https://pthokala.github.io/CafeUp/appcast.xml`, but **GitHub Pages is not currently enabled** on this repo. The first attempt to enable it returns HTTP 422: *"Your current plan does not support GitHub Pages for this repository."* This is because the repo is **private** and GitHub Pages requires a paid plan (Pro/Team/Enterprise) for private repositories.
+
+### Symptoms when unfixed
+
+- *Check for Updates…* in a production build → Sparkle reports a network/feed error after attempting to fetch the URL.
+- The local test in § *Verifying an update flow locally* above still works, since it points `SUFeedURL` at a `file://` (or `http://localhost`) URL.
+- The release pipeline still **functions** — `xcodebuild archive`, codesigning, notarization, EdDSA signing, GitHub Release creation, and the `docs/appcast.xml` commit all succeed. Only the *delivery* of the feed to end users is blocked.
+
+### Resolution options (in rough order of effort)
+
+1. **Make the repo public.** Standard posture for an open-source menu-bar app; unblocks free Pages immediately. Pre-flip checklist:
+   - Audit git history for committed secrets (`git log -p`, `gitleaks detect`, etc.). Repo secrets used by the release workflow live in GitHub Settings, not the tree, so this should come up clean — but verify.
+   - Confirm `Sources/Resources/CafeUp.entitlements` and any developer-account references are non-sensitive.
+   - Decide on a license (currently none specified) before making the source public.
+2. **Upgrade GitHub plan** to Pro / Team / Enterprise for private-repo Pages support.
+3. **Host the appcast on a different platform** (Netlify, Vercel, Cloudflare Pages, S3 + CloudFront, your own server). Touches:
+   - `project.yml` → `SUFeedURL`
+   - `.github/workflows/release.yml` → `RELEASE_URL` interpolation in the appcast-update step
+   - Set up CI/CD for the chosen host to deploy `docs/appcast.xml` on every commit to `main`.
+   - Decide where the release zip itself is hosted (likely still GitHub Releases — Sparkle's `<enclosure url=…>` and `SUFeedURL` can be on different origins).
+4. **Self-hosted update channel** (skip Sparkle's appcast entirely, e.g. a small JSON manifest you maintain manually). Higher maintenance; not recommended.
+
+Until one of the above lands, version `0.3.0` is buildable and signable but won't reach existing `0.2.0` installs via *Check for Updates…*. Users would need to download the GitHub Release zip manually.
