@@ -93,7 +93,7 @@ final class MenuBarIconStyleTests: XCTestCase {
         XCTAssertEqual(MenuBarIconStyle.ledBulb.rendering(isActive: true),  .symbol("lightbulb.led.fill"))
     }
 
-    // MARK: - Amphetamine-flavored additions
+    // MARK: - Non-coffee icons
 
     func test_flame_usesFlameSymbolWithFillSwap() {
         XCTAssertEqual(MenuBarIconStyle.flame.rendering(isActive: false), .symbol("flame"))
@@ -117,7 +117,7 @@ final class MenuBarIconStyleTests: XCTestCase {
 
     func test_owl_usesBirdSymbolWithFillSwap() {
         // SF Symbols has no dedicated owl; `bird` is the closest perched-silhouette
-        // stand-in for Amphetamine's classic owl icon.
+        // stand-in.
         XCTAssertEqual(MenuBarIconStyle.owl.rendering(isActive: false), .symbol("bird"))
         XCTAssertEqual(MenuBarIconStyle.owl.rendering(isActive: true),  .symbol("bird.fill"))
     }

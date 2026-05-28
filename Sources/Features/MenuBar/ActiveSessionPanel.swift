@@ -1,8 +1,8 @@
 import SwiftUI
 
-/// Rich, Amphetamine-styled active-session panel. Used as the `view` of a single
-/// NSMenuItem at the top of the status-item menu so we get full styling control
-/// (square checkboxes, prominent pill button) that vanilla NSMenu items don't allow.
+/// Rich active-session panel. Used as the `view` of a single NSMenuItem at the
+/// top of the status-item menu so we get full styling control (square checkboxes,
+/// prominent pill button) that vanilla NSMenu items don't allow.
 struct ActiveSessionPanel: View {
     @Bindable var viewModel: MenuBarViewModel
     let onEnd: @MainActor () -> Void
@@ -23,7 +23,7 @@ struct ActiveSessionPanel: View {
             // Pill button gets its own section bounded by matching hairlines
             // top + bottom, with identical vertical padding so the button sits
             // dead-center between them. Horizontal padding narrows the button
-            // away from the panel edges (matches Amphetamine's inset look).
+            // inward from the panel edges for a clean inset look.
             subtleSeparator
             endButton
                 .padding(.horizontal, 10)
@@ -83,8 +83,7 @@ struct ActiveSessionPanel: View {
         }
     }
 
-    /// Hairline horizontal separator (more subtle than SwiftUI's default `Divider()`,
-    /// matches Amphetamine's faint section breaks).
+    /// Hairline horizontal separator — more subtle than SwiftUI's default `Divider()`.
     private var subtleSeparator: some View {
         Rectangle()
             .fill(Color.primary.opacity(0.08))

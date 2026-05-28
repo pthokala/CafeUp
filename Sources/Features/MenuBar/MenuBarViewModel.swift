@@ -82,7 +82,7 @@ final class MenuBarViewModel {
         guard let session = engine.current else { return nil }
         guard let endsAt = session.endsAt else { return "Indeterminate time remaining" }
         let remaining = max(0, Int(endsAt.timeIntervalSince(now)))
-        let duration = RemainingFormatter.amphetamineStyle(secondsRemaining: remaining)
+        let duration = RemainingFormatter.verboseStyle(secondsRemaining: remaining)
         let endsText = RemainingFormatter.clockTime(endsAt)
         return "\(duration) (\(endsText))"
     }

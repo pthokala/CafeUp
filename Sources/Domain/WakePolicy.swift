@@ -44,7 +44,7 @@ struct WakePolicy: Sendable, Hashable, Codable {
         return copy
     }
 
-    /// Default: keep display on, allow lid-close sleep (matches Amphetamine's defaults).
+    /// Default: keep display on, allow lid-close sleep.
     static let `default` = WakePolicy()
 
     /// Equivalent of the legacy `.systemOnly` enum case — system stays awake but display
