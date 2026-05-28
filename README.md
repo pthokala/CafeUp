@@ -54,13 +54,7 @@ The app launches itself if it isn't already running. URL dispatch is
 fire-and-forget and uses LaunchServices — no listening sockets, no extra
 processes.
 
-**`cafeup` CLI** — a small shell wrapper bundled inside the app. Install once:
-
-```bash
-sudo ln -sf "/Applications/CafeUp.app/Contents/Resources/cafeup" /usr/local/bin/cafeup
-```
-
-Then:
+**`cafeup` CLI** — a small shell wrapper bundled inside the app. After the one-time symlink (see [Initial setup](#initial-setup)):
 
 ```
 cafeup start [--minutes N]                  # omit --minutes for indefinite
@@ -105,6 +99,102 @@ If a new version is available, [Sparkle](https://sparkle-project.org) downloads 
 
 ### Settings window (⌘,)
 Three tabs: **General** (default wake behavior + updates), **Triggers** (CRUD), **Appearance** (icon picker).
+
+---
+
+## Initial setup
+
+### The one-command path
+
+If you have the repo cloned (or a downloaded `.app`/`.zip`/`.dmg`), the
+installer script does everything below in one shot — idempotent, dry-runnable,
+uninstallable:
+
+```bash
+# Build from this repo and install:
+./scripts/install.sh
+
+# Or install a downloaded artifact:
+./scripts/install.sh --from ~/Downloads/CafeUp.zip
+
+# Or pull a published release:
+./scripts/install.sh --from-release latest
+
+# Also wire Claude Code to read ~/AGENTS.md:
+./scripts/install.sh --wire-claude
+
+# Preview without changing anything:
+./scripts/install.sh --dry-run
+
+# Reverse it:
+./scripts/install.sh --uninstall          # keeps ~/AGENTS.md
+./scripts/install.sh --uninstall --purge  # also strips CafeUp from ~/AGENTS.md
+```
+
+`scripts/install.sh --help` lists every flag. Everything in the manual steps
+below is what the script does internally — read those to understand the
+contract; run the script to apply it.
+
+### The manual path
+
+After installing CafeUp into `/Applications`, run **one** command to put the bundled `cafeup` CLI on your `$PATH`:
+
+```bash
+# Apple Silicon (Homebrew default) — no sudo:
+ln -sf "/Applications/CafeUp.app/Contents/Resources/cafeup" /opt/homebrew/bin/cafeup
+
+# Intel Mac (or any setup where /usr/local/bin is the convention):
+sudo ln -sf "/Applications/CafeUp.app/Contents/Resources/cafeup" /usr/local/bin/cafeup
+```
+
+Verify:
+
+```bash
+cafeup status --json
+```
+
+### Why this one symlink matters
+
+This is the entire contract that lets *any* AI coding agent — Claude Code, a
+local Qwen, Codex, Cursor, whatever ships next — control CafeUp by name with
+**zero per-agent configuration**: no MCP server, no `AGENTS.md`, no plugin, no
+prompt engineering.
+
+The chain, when you tell an agent *"start a CafeUp session for an hour"*:
+
+1. Agent guesses the binary is `cafeup` (brand name = binary name).
+2. `which cafeup` finds it → step 1 confirmed.
+3. `cafeup --help` reveals `start --minutes N`.
+4. Agent runs `cafeup start --minutes 60`. Done.
+
+Remove the symlink and step 2 fails — every agent would then need its own
+configuration to even learn CafeUp exists. With the symlink, the universal
+UNIX primitives (`$PATH` + `--help`) do all the discovery work, forever, for
+every agent that can spawn a shell.
+
+The two things keeping the contract intact: (a) the binary name matches the
+brand name, and (b) `cafeup --help` stays accurate. Don't break either.
+
+### Register CafeUp in your global `AGENTS.md`
+
+If you use AI coding agents, also append this snippet to your `~/AGENTS.md`
+(the agent-neutral context convention — a single file pointed at by each
+agent's user-level config so they all share the same knowledge):
+
+```markdown
+## CafeUp
+Keep Mac awake. CLI: `cafeup start --minutes N` / `cafeup stop` / `cafeup status --json`.
+```
+
+The symlink alone covers any agent that probes `$PATH` and runs `--help` on
+the way to executing your request. This snippet is belt-and-suspenders for
+the agents that don't — they read `~/AGENTS.md` at session start and learn
+about CafeUp before you even ask.
+
+Wiring it into each agent (one-time, per machine):
+
+- **Claude Code** — in `~/.claude/CLAUDE.md`, add: `See ~/AGENTS.md for shared tool context.`
+- **Other agents** — point their user-level instructions file at `~/AGENTS.md` the same way.
 
 ---
 
