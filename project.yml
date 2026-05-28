@@ -64,7 +64,13 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.pardhu.CafeUp
         GENERATE_INFOPLIST_FILE: NO
-        ENABLE_HARDENED_RUNTIME: YES
+        # Disabled while we ship ad-hoc-signed releases (no Apple Developer
+        # Program membership yet). Hardened runtime forces Library Validation,
+        # which rejects Sparkle.framework when the main app and the framework
+        # don't share a Team ID — and ad-hoc binaries have no Team ID, so
+        # nothing satisfies the check. Re-enable when DevID signing is
+        # configured (notarization also requires it). See SPECS § 20.1.
+        ENABLE_HARDENED_RUNTIME: NO
 
   CafeUpTests:
     type: bundle.unit-test

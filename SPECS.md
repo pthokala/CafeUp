@@ -26,7 +26,7 @@ Comprehensive specification of CafeUp's user-facing behavior, internal architect
 18. [Backward compatibility & migration](#18-backward-compatibility--migration)
 19. [Known limitations & non-goals](#19-known-limitations--non-goals)
 20. [Update system](#20-update-system)
-    - 20.1 [Open: appcast hosting](#201-open-appcast-hosting) ⚠️
+    - 20.1 [Signing modes (DevID vs ad-hoc)](#201-signing-modes-devid-vs-ad-hoc)
 
 ---
 
@@ -902,28 +902,34 @@ Without a real Developer ID + Pages site you can still test the UI:
 - **Signed feeds** (`SURequireSignedFeed`) — extra defense for the appcast XML; worth adding once we're shipping at scale.
 - **Custom Sparkle UI** — Sparkle's stock dialog is well-localized and accessible; no reason to roll our own.
 
-## 20.1 Open: appcast hosting
+## 20.1 Signing modes (DevID vs ad-hoc)
 
-`SUFeedURL` is configured to `https://pthokala.github.io/CafeUp/appcast.xml`, but **GitHub Pages is not currently enabled** on this repo. The first attempt to enable it returns HTTP 422: *"Your current plan does not support GitHub Pages for this repository."* This is because the repo is **private** and GitHub Pages requires a paid plan (Pro/Team/Enterprise) for private repositories.
+CafeUp's release workflow supports two signing modes and chooses automatically based on which secrets are configured.
 
-### Symptoms when unfixed
+### Mode A: full Developer ID + notarization (preferred)
 
-- *Check for Updates…* in a production build → Sparkle reports a network/feed error after attempting to fetch the URL.
-- The local test in § *Verifying an update flow locally* above still works, since it points `SUFeedURL` at a `file://` (or `http://localhost`) URL.
-- The release pipeline still **functions** — `xcodebuild archive`, codesigning, notarization, EdDSA signing, GitHub Release creation, and the `docs/appcast.xml` commit all succeed. Only the *delivery* of the feed to end users is blocked.
+Requires all six Apple Developer secrets (`DEV_ID_CERT_P12_BASE64`, `DEV_ID_CERT_PASSWORD`, `KEYCHAIN_PASSWORD`, `APPLE_API_KEY_ID`, `APPLE_API_KEY_ISSUER`, `APPLE_API_KEY_P8_BASE64`) plus `SPARKLE_ED_PRIVATE_KEY`. The pipeline runs the canonical flow: archive → export with `developer-id` method → codesign verify → `notarytool submit --wait` → `stapler staple` → zip → EdDSA-sign → release.
 
-### Resolution options (in rough order of effort)
+Hardened runtime is **required** for notarization. To re-enable it when DevID is set up:
+- Set `ENABLE_HARDENED_RUNTIME: YES` in `project.yml`
+- `xcodegen generate`
+- Commit
 
-1. **Make the repo public.** Standard posture for an open-source menu-bar app; unblocks free Pages immediately. Pre-flip checklist:
-   - Audit git history for committed secrets (`git log -p`, `gitleaks detect`, etc.). Repo secrets used by the release workflow live in GitHub Settings, not the tree, so this should come up clean — but verify.
-   - Confirm `Sources/Resources/CafeUp.entitlements` and any developer-account references are non-sensitive.
-   - Decide on a license (currently none specified) before making the source public.
-2. **Upgrade GitHub plan** to Pro / Team / Enterprise for private-repo Pages support.
-3. **Host the appcast on a different platform** (Netlify, Vercel, Cloudflare Pages, S3 + CloudFront, your own server). Touches:
-   - `project.yml` → `SUFeedURL`
-   - `.github/workflows/release.yml` → `RELEASE_URL` interpolation in the appcast-update step
-   - Set up CI/CD for the chosen host to deploy `docs/appcast.xml` on every commit to `main`.
-   - Decide where the release zip itself is hosted (likely still GitHub Releases — Sparkle's `<enclosure url=…>` and `SUFeedURL` can be on different origins).
-4. **Self-hosted update channel** (skip Sparkle's appcast entirely, e.g. a small JSON manifest you maintain manually). Higher maintenance; not recommended.
+### Mode B: ad-hoc + EdDSA only (current default)
 
-Until one of the above lands, version `0.3.0` is buildable and signable but won't reach existing `0.2.0` installs via *Check for Updates…*. Users would need to download the GitHub Release zip manually.
+Requires only `SPARKLE_ED_PRIVATE_KEY`. When the workflow detects no `DEV_ID_CERT_P12_BASE64` secret, it falls back to: archive → strip the archive's signature → re-sign the bundle and Sparkle.framework ad-hoc (no `--options runtime`) → zip → EdDSA-sign → release. Notarization is skipped.
+
+Hardened runtime is **disabled** in this mode (`ENABLE_HARDENED_RUNTIME: NO` in `project.yml`). With it on, macOS Library Validation rejects Sparkle.framework at first launch because the framework and the main binary have different (or, for ad-hoc, no) Team IDs.
+
+End-user impact:
+- First install requires a one-time Gatekeeper bypass (right-click → **Open** → **Open Anyway**). The release notes prepend a banner explaining this in ad-hoc mode.
+- Subsequent launches and Sparkle auto-updates work normally — the bundle stays trusted in LaunchServices after the initial accept.
+- Sparkle's EdDSA verification is fully enforced regardless of mode; an unsigned/tampered update is still rejected with `Update is improperly signed`.
+
+### Switching modes
+
+To go from B → A: add the six Apple Developer secrets, flip `ENABLE_HARDENED_RUNTIME` back to `YES`, regenerate, commit. The very next tag triggers the DevID branch automatically — no workflow change.
+
+### Why the workflow does a re-sign in ad-hoc mode
+
+`xcodebuild archive` always produces a signature (ad-hoc when no DevID is available), and depending on Xcode/macOS version it may or may not preserve the `runtime` option flag from prior settings. We `codesign --remove-signature` then `codesign --force --sign -` to guarantee the resulting bundle has `flags=0x2(adhoc)` (no runtime), which is what makes Library Validation skip the framework Team ID check.
