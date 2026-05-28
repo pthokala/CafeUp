@@ -13,8 +13,9 @@ enum RemainingFormatter {
         return String(format: "%d:%02d", minutes, secs)
     }
 
-    /// Verbose format used in the Amphetamine-style menu: `MMm SSs remaining`.
-    static func amphetamineStyle(secondsRemaining: Int) -> String {
+    /// Verbose format used in the active-session menu: `MMm SSs remaining`,
+    /// or `HHh MMm SSs remaining` when hours > 0.
+    static func verboseStyle(secondsRemaining: Int) -> String {
         let seconds = max(0, secondsRemaining)
         let hours = seconds / 3600
         let minutes = (seconds % 3600) / 60

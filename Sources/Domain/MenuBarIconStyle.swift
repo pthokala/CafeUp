@@ -87,7 +87,7 @@ enum MenuBarIconStyle: String, Codable, CaseIterable, Identifiable, Sendable {
             return .symbol(isActive ? "moon.fill"                  : "moon")
         case .owl:
             // Apple's `bird` glyph is the closest single-symbol stand-in for
-            // Amphetamine's classic owl icon — perched-bird silhouette at 18pt.
+            // a perched-bird silhouette at 18pt.
             return .symbol(isActive ? "bird.fill"                  : "bird")
         case .hexagon:
             return .symbol(isActive ? "hexagon.fill"               : "hexagon")

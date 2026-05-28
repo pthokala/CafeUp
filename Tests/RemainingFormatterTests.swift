@@ -20,22 +20,22 @@ final class RemainingFormatterTests: XCTestCase {
         XCTAssertEqual(RemainingFormatter.format(secondsRemaining: -10), "0:00")
     }
 
-    // MARK: amphetamineStyle
+    // MARK: verboseStyle
 
-    func test_amphetamineStyle_underAnHour() {
-        XCTAssertEqual(RemainingFormatter.amphetamineStyle(secondsRemaining: 593), "09m 53s remaining")
-        XCTAssertEqual(RemainingFormatter.amphetamineStyle(secondsRemaining: 0), "00m 00s remaining")
+    func test_verboseStyle_underAnHour() {
+        XCTAssertEqual(RemainingFormatter.verboseStyle(secondsRemaining: 593), "09m 53s remaining")
+        XCTAssertEqual(RemainingFormatter.verboseStyle(secondsRemaining: 0), "00m 00s remaining")
     }
 
-    func test_amphetamineStyle_overAnHour() {
+    func test_verboseStyle_overAnHour() {
         XCTAssertEqual(
-            RemainingFormatter.amphetamineStyle(secondsRemaining: 3_725),
+            RemainingFormatter.verboseStyle(secondsRemaining: 3_725),
             "01h 02m 05s remaining"
         )
     }
 
-    func test_amphetamineStyle_negativeClampsToZero() {
-        XCTAssertEqual(RemainingFormatter.amphetamineStyle(secondsRemaining: -10), "00m 00s remaining")
+    func test_verboseStyle_negativeClampsToZero() {
+        XCTAssertEqual(RemainingFormatter.verboseStyle(secondsRemaining: -10), "00m 00s remaining")
     }
 
     // MARK: clockTime

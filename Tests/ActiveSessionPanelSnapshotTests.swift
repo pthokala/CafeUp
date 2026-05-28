@@ -15,20 +15,19 @@ final class ActiveSessionPanelSnapshotTests: XCTestCase {
         try renderAndSave(panel, named: "panel-timed-default")
     }
 
-    func test_snapshot_timedSession_amphetamineDefaults() throws {
+    func test_snapshot_timedSession_defaultPolicy() throws {
         let sut = makeSUT()
         sut.viewModel.start(duration: .seconds(13 * 60 + 47))
-        // Amphetamine screenshot: only the middle toggle is on.
+        // Default policy: display stays on, system may sleep when the lid is closed,
+        // screen saver disabled. Only the middle toggle is on.
         sut.viewModel.policy.allowDisplaySleep = false
-        sut.viewModel.policy.allowSystemSleepWhenLidClosed = false  // checked means "DON'T prevent" => off here? Actually:
-        // In Amphetamine the second checkbox is CHECKED = "Allow system sleep when display is closed" = ON.
         sut.viewModel.policy.allowSystemSleepWhenLidClosed = true
         sut.viewModel.policy.allowScreenSaverAfter45Min = false
 
         let panel = ActiveSessionPanel(viewModel: sut.viewModel, onEnd: {})
             .background(Color(nsColor: .windowBackgroundColor))
 
-        try renderAndSave(panel, named: "panel-amphetamine-defaults")
+        try renderAndSave(panel, named: "panel-default-policy")
     }
 
     func test_snapshot_indefiniteSession() throws {

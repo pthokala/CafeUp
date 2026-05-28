@@ -5,7 +5,7 @@ final class WakePolicyTests: XCTestCase {
 
     // MARK: - Defaults
 
-    func test_default_matchesAmphetamine() {
+    func test_default_keepsDisplayOnAndAllowsLidClosedSleep() {
         let policy = WakePolicy.default
         XCTAssertFalse(policy.allowDisplaySleep)
         XCTAssertTrue(policy.allowSystemSleepWhenLidClosed)

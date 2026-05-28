@@ -1,6 +1,6 @@
 # CafeUp
 
-A native macOS menu-bar app that keeps your Mac awake — modeled after [Amphetamine](https://apps.apple.com/us/app/amphetamine/id937984704). One click in the menu bar starts a session; the system (and optionally the display) stays awake until you tell it to stop, the timer runs out, the app you tied it to quits, or your downloads finish.
+A native macOS menu-bar app that keeps your Mac awake. One click in the menu bar starts a session; the system (and optionally the display) stays awake until you tell it to stop, the timer runs out, the app you tied it to quits, or your downloads finish.
 
 ---
 
@@ -213,10 +213,4 @@ The pipeline picks automatically based on `DEV_ID_CERT_P12_BASE64` presence. See
 
 ## Status
 
-Active development. Visual parity with Amphetamine for the active-session panel and main menu is the current focus.
-
----
-
-## Credits
-
-UI and feature set inspired by [Amphetamine](https://roaringapps.com/app/amphetamine) by William Gustafson. CafeUp is an independent reimplementation, not affiliated.
+Active development. Polishing the active-session panel and main menu is the current focus.

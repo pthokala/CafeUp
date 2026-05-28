@@ -143,7 +143,7 @@ Both inventories are derived from `SessionPreset.minutePresets` / `.hourPresets`
 
 ## 4. Active-session panel specification
 
-`ActiveSessionPanel` is a SwiftUI view embedded via `NSHostingView` at the top of the active menu. Fixed width 330pt, dynamic height. Visual goal: match Amphetamine's active-session block.
+`ActiveSessionPanel` is a SwiftUI view embedded via `NSHostingView` at the top of the active menu. Fixed width 330pt, dynamic height. Visual goal: a rich active-session block with full styling control (square checkboxes, prominent pill button).
 
 ### Vertical layout (top to bottom)
 
@@ -165,8 +165,8 @@ Outer panel paddings: 16pt horizontal (matches NSMenu item inset so toggle label
 `MenuBarViewModel.sessionStatusLine(now:)`:
 - No active session → `nil` (the panel section is hidden).
 - Indefinite session (`session.endsAt == nil`) → `"Indeterminate time remaining"`.
-- Timed session → `"\(amphetamineStyle(secondsRemaining)) (\(clockTime(endsAt)))"`, e.g. `"09m 51s remaining (3:24 PM)"` or `"02h 59m 30s remaining (4:21 PM)"`.
-- `RemainingFormatter.amphetamineStyle` uses `HHh MMm SSs remaining` if hours > 0 else `MMm SSs remaining`.
+- Timed session → `"\(verboseStyle(secondsRemaining)) (\(clockTime(endsAt)))"`, e.g. `"09m 51s remaining (3:24 PM)"` or `"02h 59m 30s remaining (4:21 PM)"`.
+- `RemainingFormatter.verboseStyle` uses `HHh MMm SSs remaining` if hours > 0 else `MMm SSs remaining`.
 
 ### Activation label
 
@@ -263,7 +263,7 @@ struct WakePolicy: Sendable, Hashable, Codable {
 }
 ```
 
-Defaults match Amphetamine's out-of-the-box behavior visible in the original app's screenshot.
+Defaults keep the display awake while still allowing lid-closed sleep — a sensible "stay awake at my desk, sleep when I close the lid" baseline.
 
 ### Legacy compatibility constants
 
@@ -531,7 +531,7 @@ Default: `cupAndSaucer`.
 
 `battery` is **state-asymmetric**: idle = `battery.0percent` (empty / sleeping), active = `battery.100percent` (full / powered). All other styles use the conventional outline → `.fill` pairing.
 
-The non-coffee additions (`flame`, `owl`, `deskLamp`, `hexagon`, `moon`, `battery`) are inspired by Amphetamine's stock icon set; they map Apple-shipped SF Symbols to the equivalent metaphors. Amphetamine's "Tea Kettle" was considered but SF Symbols' `kettle` requires a newer macOS than our 14.0 deployment target — skipped until we raise it.
+The non-coffee additions (`flame`, `owl`, `deskLamp`, `hexagon`, `moon`, `battery`) round out the "wakefulness" metaphor with Apple-shipped SF Symbols. A "Tea Kettle" was considered but SF Symbols' `kettle` requires a newer macOS than our 14.0 deployment target — skipped until we raise it.
 
 ---
 
@@ -708,7 +708,7 @@ All fakes live under `Tests/Fakes/`.
 | Trigger store | `UserDefaultsTriggerStoreTests` | load/save/persistence/corruption |
 | Downloads monitor | `DownloadsMonitorTests` | partial-extension detection (Safari, Chrome, Firefox, generic), case-insensitivity, missing directory |
 | Domain value types | `SessionTests`, `SessionPresetTests`, `WorldStateTests`, `PowerSourceTests`, `TimeOfDayTests`, `TimeRangeTests`, `WeekdayTests` | invariants, equality, edge cases |
-| Formatter | `RemainingFormatterTests` | M:SS / H:MM:SS / Amphetamine-style / clock time |
+| Formatter | `RemainingFormatterTests` | M:SS / H:MM:SS / verbose `MMm SSs remaining` / clock time |
 | Appearance | `MenuBarIconStyleTests`, `IconStylePreferenceStoreTests`, `AppearanceViewModelTests` | rendering per active state, persistence |
 
 ### Live verification
