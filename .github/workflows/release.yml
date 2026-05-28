@@ -39,7 +39,10 @@ permissions:
 
 jobs:
   release:
-    runs-on: macos-14
+    # macos-15 has Xcode 16, which can read the pbxproj objectVersion that
+    # xcodegen produces on modern macOS toolchains. macos-14's Xcode 15.4
+    # rejects format 77 with "future Xcode project file format".
+    runs-on: macos-15
     timeout-minutes: 60
 
     steps:
