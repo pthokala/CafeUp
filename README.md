@@ -202,17 +202,14 @@ The `release` GitHub Actions workflow builds, signs, notarizes, staples, EdDSA-s
 
 For a local release (without CI), run `scripts/release.sh 0.2.1` — same flow, single machine.
 
-### ⚠️ Open: appcast hosting
+### Signing
 
-The Sparkle feed URL (`SUFeedURL` → `https://pthokala.github.io/CafeUp/appcast.xml`) currently 404s because the repo is **private** and GitHub Pages doesn't serve private repos on the free plan. Until this is resolved, *Check for Updates…* will fail in production builds — the rest of the release pipeline (build, sign, notarize, GH Release) works fine.
+The release workflow ships in one of two modes depending on which secrets are configured:
 
-Options to resolve, in rough order of effort:
+- **Developer ID + notarized** (preferred) — requires all six Apple Developer secrets plus `SPARKLE_ED_PRIVATE_KEY`. Clean install for end users, hardened runtime enabled.
+- **Ad-hoc + EdDSA only** (current default) — requires only `SPARKLE_ED_PRIVATE_KEY`. First install needs a one-time Gatekeeper bypass (right-click → **Open**). Auto-updates work fine afterwards.
 
-1. **Make the repo public.** Standard for an open-source menu-bar utility; unblocks free Pages immediately. Before flipping, audit history for any committed secrets (the release workflow uses repo secrets, not committed values, so this should be clean — verify with `git log -p` / `gitleaks` first).
-2. **Upgrade to GitHub Pro / Team / Enterprise.** Required for Pages on private repos.
-3. **Host the appcast elsewhere** (Netlify, Vercel, Cloudflare Pages, S3, your own server). Requires updating `SUFeedURL` in `project.yml` and the `RELEASE_URL` interpolation in `.github/workflows/release.yml`.
-
-See [SPECS § 20.1](./SPECS.md#201-open-appcast-hosting) for the same note from the technical-spec side.
+The pipeline picks automatically based on `DEV_ID_CERT_P12_BASE64` presence. See [SPECS § 20.1](./SPECS.md#201-signing-modes-devid-vs-ad-hoc) for the full mode comparison and how to switch from ad-hoc → DevID when you have Apple Developer Program credentials.
 
 ## Status
 
