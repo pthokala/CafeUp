@@ -50,7 +50,7 @@ enum MenuBarIconStyle: String, Codable, CaseIterable, Identifiable, Sendable {
         case .circle:        return "Circle"
         case .pill:          return "Pill"
         case .dot:           return "Dot"
-        case .dividedDisc:   return "Divided Disc"
+        case .dividedDisc:   return "Divided Disc 1"
         }
     }
 
