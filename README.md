@@ -304,3 +304,4 @@ The pipeline picks automatically based on `DEV_ID_CERT_P12_BASE64` presence. See
 ## Status
 
 Active development. Polishing the active-session panel and main menu is the current focus.
+tested-by-elevatecode-pr
