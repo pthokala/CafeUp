@@ -14,6 +14,7 @@
 		1250BF077B0A989E589E83C6 /* FakeStatusWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B7E99F3ED4C56BA5326608F /* FakeStatusWriter.swift */; };
 		146C4E8B2F439019974FAF35 /* MenuBarIconStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CF6475DAF5ADAB6D03BC8BF /* MenuBarIconStyle.swift */; };
 		15C9F5FF452B1070DBE6B9F8 /* FakeSessionLifecycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9293A1D19E374CE76F42545F /* FakeSessionLifecycle.swift */; };
+		193C955497062664BE126835 /* AuxiliaryWindows.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15CD1732A9A176E1DBB62DDA /* AuxiliaryWindows.swift */; };
 		19CE913E028B6715361BF327 /* FakeSessionAlertSounds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9C41DB3447DFF7813B1631 /* FakeSessionAlertSounds.swift */; };
 		1C18C3C929DDEA679166D81D /* AppIcon.icns in Resources */ = {isa = PBXBuildFile; fileRef = 2446B1B4F49B5716EB80DAE0 /* AppIcon.icns */; };
 		1EDF7D16A36633DE58794753 /* TriggersViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09D7F87B56A4FFC3B20B2FAB /* TriggersViewModelTests.swift */; };
@@ -146,6 +147,7 @@
 		0EBF8F519E78A0AD7B447F1E /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		0FF54D49369486ABE3B767B7 /* StatusSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusSnapshot.swift; sourceTree = "<group>"; };
 		1423246595D0C11C18068969 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
+		15CD1732A9A176E1DBB62DDA /* AuxiliaryWindows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuxiliaryWindows.swift; sourceTree = "<group>"; };
 		1657119BD6C2AE4B52FC0646 /* SessionMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionMode.swift; sourceTree = "<group>"; };
 		1719D7F7BABE901960DE7E7D /* MenuBarViewModelScreenSaverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarViewModelScreenSaverTests.swift; sourceTree = "<group>"; };
 		1747849A6CD83223536F7F25 /* TimeRangeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeRangeTests.swift; sourceTree = "<group>"; };
@@ -420,6 +422,7 @@
 			children = (
 				0EBF8F519E78A0AD7B447F1E /* AppDelegate.swift */,
 				D21EDB52AB46D2FFECAB8808 /* AppIntentBridge.swift */,
+				15CD1732A9A176E1DBB62DDA /* AuxiliaryWindows.swift */,
 				9EBAE91FAE6E7E1E18117D0F /* CafeUpApp.swift */,
 				5C653B585DF4B6B3528D243F /* CafeUpIntents.swift */,
 				2659B06B87D5D39839407DAA /* CompositionRoot.swift */,
@@ -666,6 +669,7 @@
 				C192C6B38A6D448470934567 /* AppLifetimeWatcher.swift in Sources */,
 				E43CF2AE7DAC67257F437F1A /* AppPicker.swift in Sources */,
 				2004BBF63DC15B126A311638 /* AppearanceViewModel.swift in Sources */,
+				193C955497062664BE126835 /* AuxiliaryWindows.swift in Sources */,
 				6DB0715C63249C66FE23A6E8 /* CafeUpApp.swift in Sources */,
 				A56326CA0AAE0C146C10A48D /* CafeUpIntents.swift in Sources */,
 				D2ED23A640407835889100BB /* Clock.swift in Sources */,

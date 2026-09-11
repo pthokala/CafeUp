@@ -1,8 +1,8 @@
 import SwiftUI
 
 struct CustomDurationView: View {
-    @Environment(\.dismissWindow) private var dismissWindow
     let onStart: @MainActor (Duration) -> Void
+    let onClose: @MainActor () -> Void
 
     @State private var hours: Int = 1
     @State private var minutes: Int = 0
@@ -34,13 +34,13 @@ struct CustomDurationView: View {
 
             HStack {
                 Spacer()
-                Button("Cancel") { dismissWindow(id: WindowID.customDuration) }
+                Button("Cancel") { onClose() }
                     .keyboardShortcut(.cancelAction)
                 Button("Start") {
                     let seconds = hours * 3600 + minutes * 60
                     guard seconds > 0 else { return }
                     onStart(.seconds(seconds))
-                    dismissWindow(id: WindowID.customDuration)
+                    onClose()
                 }
                 .keyboardShortcut(.defaultAction)
                 .disabled(hours == 0 && minutes == 0)

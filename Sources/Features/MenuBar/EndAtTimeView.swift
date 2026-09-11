@@ -1,8 +1,8 @@
 import SwiftUI
 
 struct EndAtTimeView: View {
-    @Environment(\.dismissWindow) private var dismissWindow
     let onStart: @MainActor (Date) -> Void
+    let onClose: @MainActor () -> Void
 
     @State private var endDate: Date = Date().addingTimeInterval(60 * 60)
 
@@ -23,11 +23,11 @@ struct EndAtTimeView: View {
 
             HStack {
                 Spacer()
-                Button("Cancel") { dismissWindow(id: WindowID.endAtTime) }
+                Button("Cancel") { onClose() }
                     .keyboardShortcut(.cancelAction)
                 Button("Start") {
                     onStart(normalizedEndDate())
-                    dismissWindow(id: WindowID.endAtTime)
+                    onClose()
                 }
                 .keyboardShortcut(.defaultAction)
             }

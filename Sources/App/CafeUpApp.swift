@@ -3,32 +3,18 @@ import SwiftUI
 @main
 struct CafeUpApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-    @Environment(\.openWindow) private var openWindow
 
     var body: some Scene {
-        Window("Settings", id: WindowID.settings) {
-            SettingsView(
-                menuBarViewModel: appDelegate.deps.menuBarViewModel,
-                appearanceViewModel: appDelegate.deps.appearanceViewModel,
-                triggersViewModel: appDelegate.deps.triggersViewModel,
-                updatesViewModel: appDelegate.deps.updatesViewModel
-            )
-            .onAppear { appDelegate.openWindow = { id in openWindow(id: id) } }
-        }
-        .windowResizability(.contentSize)
-
-        Window("Custom Duration", id: WindowID.customDuration) {
-            CustomDurationView { duration in
-                appDelegate.deps.menuBarViewModel.start(duration: duration)
+        // CafeUp's windows are presented by `AuxiliaryWindows` — see there for
+        // why they aren't SwiftUI `Window` scenes. An `App` still needs one
+        // scene, and an empty `Settings` scene never opens on its own.
+        Settings { EmptyView() }
+            .commands {
+                // Point ⌘, at the real Settings window instead of this empty scene.
+                CommandGroup(replacing: .appSettings) {
+                    Button("Settings…") { appDelegate.showSettings() }
+                        .keyboardShortcut(",", modifiers: .command)
+                }
             }
-        }
-        .windowResizability(.contentSize)
-
-        Window("End at Time", id: WindowID.endAtTime) {
-            EndAtTimeView { endDate in
-                appDelegate.deps.menuBarViewModel.startUntil(endDate)
-            }
-        }
-        .windowResizability(.contentSize)
     }
 }
