@@ -134,6 +134,64 @@ final class TriggerEngineTests: XCTestCase {
         XCTAssertEqual(sut.assertions.lastPolicy, .systemAndDisplay)
     }
 
+    func test_acquireFailure_doesNotReportTriggerActive() {
+        let trigger = Trigger(name: "AC", conditions: [.onACPower])
+        let sut = makeSUT(initial: [trigger], initialPower: PowerSource(isOnACPower: true, batteryPercentage: 100))
+        sut.assertions.failure = .assertionFailed(code: -1)
+
+        sut.engine.start()
+
+        XCTAssertTrue(sut.engine.activeTriggerIds.isEmpty)
+        XCTAssertFalse(sut.engine.isAnyTriggerActive)
+    }
+
+    func test_acquireFailure_retriesOnNextWorldStateChange() {
+        let trigger = Trigger(name: "AC", conditions: [.onACPower])
+        let sut = makeSUT(initial: [trigger], initialPower: PowerSource(isOnACPower: true, batteryPercentage: 100))
+        sut.assertions.failure = .assertionFailed(code: -1)
+        sut.engine.start()
+
+        sut.assertions.failure = nil
+        sut.scheduleObserver.emit(Date(timeIntervalSince1970: 30))
+
+        XCTAssertEqual(sut.assertions.acquireCount, 1)
+        XCTAssertEqual(sut.engine.activeTriggerIds, [trigger.id])
+    }
+
+    func test_failedPolicyUpgrade_keepsExistingAssertion() {
+        let triggers = [
+            Trigger(name: "A", conditions: [.appRunning(bundleIdentifier: "a")], policy: .systemOnly),
+            Trigger(name: "B", conditions: [.appRunning(bundleIdentifier: "b")], policy: .systemAndDisplay)
+        ]
+        let sut = makeSUT(initial: triggers)
+        sut.engine.start()
+        sut.appObserver.emit(["a"])
+        let heldToken = sut.assertions.lastIssuedToken
+
+        sut.assertions.failure = .assertionFailed(code: -1)
+        sut.appObserver.emit(["a", "b"])
+
+        XCTAssertEqual(heldToken?.released, false)
+        XCTAssertTrue(sut.engine.isAnyTriggerActive)
+    }
+
+    func test_policyUpgrade_releasesPreviousAssertionAfterAcquiringNew() {
+        let triggers = [
+            Trigger(name: "A", conditions: [.appRunning(bundleIdentifier: "a")], policy: .systemOnly),
+            Trigger(name: "B", conditions: [.appRunning(bundleIdentifier: "b")], policy: .systemAndDisplay)
+        ]
+        let sut = makeSUT(initial: triggers)
+        sut.engine.start()
+        sut.appObserver.emit(["a"])
+        let firstToken = sut.assertions.lastIssuedToken
+
+        sut.appObserver.emit(["a", "b"])
+
+        XCTAssertEqual(firstToken?.released, true)
+        XCTAssertEqual(sut.assertions.lastIssuedToken?.released, false)
+        XCTAssertEqual(sut.assertions.lastPolicy, .systemAndDisplay)
+    }
+
     func test_powerEmit_activatesACPowerTrigger() {
         let trigger = Trigger(name: "AC", conditions: [.onACPower])
         let sut = makeSUT(initial: [trigger])

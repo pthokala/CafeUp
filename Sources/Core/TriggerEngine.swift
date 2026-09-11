@@ -97,18 +97,23 @@ final class TriggerEngine {
 
     private func reevaluate() {
         let satisfied = triggers.filter { $0.isSatisfied(by: worldState) }
-        let newIds = Set(satisfied.map(\.id))
-        if newIds != activeTriggerIds {
-            activeTriggerIds = newIds
+        let desiredPolicy = strictestPolicy(of: satisfied)
+
+        if desiredPolicy != activePolicy {
+            if let desiredPolicy {
+                acquireAssertion(policy: desiredPolicy)
+            } else {
+                releaseAssertion()
+            }
         }
 
-        let desiredPolicy = strictestPolicy(of: satisfied)
-        guard desiredPolicy != activePolicy else { return }
-
-        if let desiredPolicy {
-            acquireAssertion(policy: desiredPolicy)
-        } else {
-            releaseAssertion()
+        // Report triggers as active only while an assertion backs them, so a
+        // failed acquire never shows "Awake" while the Mac is free to sleep.
+        // `activePolicy` still differs from the desired one, so the next
+        // world-state change (at least every schedule tick) retries.
+        let newIds: Set<UUID> = assertionToken == nil ? [] : Set(satisfied.map(\.id))
+        if newIds != activeTriggerIds {
+            activeTriggerIds = newIds
         }
     }
 
@@ -118,12 +123,15 @@ final class TriggerEngine {
     }
 
     private func acquireAssertion(policy: WakePolicy) {
-        releaseAssertion()
         do {
-            assertionToken = try assertions.acquire(
+            let token = try assertions.acquire(
                 policy: policy,
                 reason: "CafeUp trigger keeping Mac awake"
             )
+            // Swap only once the new assertion is held, so a failed policy
+            // change keeps the Mac covered by the assertion it already had.
+            assertionToken?.release()
+            assertionToken = token
             activePolicy = policy
             logger.info("Trigger assertion acquired (\(policy))")
         } catch {
