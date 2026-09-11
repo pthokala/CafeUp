@@ -62,7 +62,9 @@ if ! security find-identity -p codesigning -v | grep -q "Developer ID Applicatio
   exit 1
 fi
 
-SIGN_UPDATE=$(find ~/Library/Developer/Xcode/DerivedData -name sign_update -type f 2>/dev/null | head -1)
+# `|| true`: with pipefail, a missing DerivedData dir would otherwise abort
+# silently here instead of printing the hint below.
+SIGN_UPDATE=$(find ~/Library/Developer/Xcode/DerivedData -name sign_update -type f -print -quit 2>/dev/null || true)
 if [[ -z "$SIGN_UPDATE" ]]; then
   echo "✗ Sparkle's sign_update tool not found. Run 'xcodebuild -resolvePackageDependencies' first." >&2
   exit 1
@@ -123,8 +125,10 @@ ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$ZIP_PATH"
 # --- EdDSA signature for Sparkle --------------------------------------------
 
 echo "→ EdDSA-signing the zip with Sparkle's sign_update…"
+# sign_update prints `sparkle:edSignature="…" length="N"` — the enclosure
+# below must not add its own length= or the attribute is duplicated and
+# Sparkle rejects the whole feed.
 SIGN_OUTPUT=$("$SIGN_UPDATE" "$ZIP_PATH")
-ZIP_LENGTH=$(stat -f%z "$ZIP_PATH")
 
 # --- Appcast item ------------------------------------------------------------
 
@@ -144,7 +148,7 @@ cat <<EOF
       <description><![CDATA[
         <!-- Paste release notes (HTML) here, then commit docs/appcast.xml -->
       ]]></description>
-      <enclosure url="$RELEASE_URL" length="$ZIP_LENGTH" type="application/octet-stream" $SIGN_OUTPUT/>
+      <enclosure url="$RELEASE_URL" type="application/octet-stream" $SIGN_OUTPUT/>
     </item>
 EOF
 echo "=============================================="

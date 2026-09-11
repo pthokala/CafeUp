@@ -286,7 +286,7 @@ acquire_from_path() {
       # Acquisition I/O is tempdir-only — execute even in dry-run so the rest
       # of the pipeline has a real bundle to inspect.
       unzip -qq "$path" -d "$WORK_DIR/extracted"
-      SOURCE_BUNDLE="$(find "$WORK_DIR/extracted" -maxdepth 3 -name "$APP_BUNDLE_NAME" -type d | head -1)"
+      SOURCE_BUNDLE="$(find "$WORK_DIR/extracted" -maxdepth 3 -name "$APP_BUNDLE_NAME" -type d -print -quit || true)"
       [ -n "$SOURCE_BUNDLE" ] || die "No $APP_BUNDLE_NAME found inside zip." 65
       ;;
     *.dmg)
@@ -296,7 +296,7 @@ acquire_from_path() {
       mkdir -p "$MOUNTED_DMG_MOUNT_POINT"
       hdiutil attach "$path" -mountpoint "$MOUNTED_DMG_MOUNT_POINT" -nobrowse -quiet
       local src_app
-      src_app="$(find "$MOUNTED_DMG_MOUNT_POINT" -maxdepth 2 -name "$APP_BUNDLE_NAME" -type d | head -1)"
+      src_app="$(find "$MOUNTED_DMG_MOUNT_POINT" -maxdepth 2 -name "$APP_BUNDLE_NAME" -type d -print -quit || true)"
       [ -n "$src_app" ] || die "No $APP_BUNDLE_NAME found inside DMG." 65
       # Copy the app out of the DMG so we can unmount cleanly.
       mkdir -p "$WORK_DIR/extracted"
@@ -326,10 +326,12 @@ acquire_from_release() {
     die "Could not reach GitHub for $version. Network down or version doesn't exist." 69
 
   # Find the first .zip asset's download URL. Avoids jq dependency.
+  # `|| true`: under pipefail a no-match grep would otherwise abort the
+  # script silently here instead of reaching the `die` below.
   local download_url
   download_url="$(printf '%s\n' "$meta" \
     | grep -E '"browser_download_url"[[:space:]]*:[[:space:]]*"[^"]+\.zip"' \
-    | head -1 | sed -E 's/.*"(https:[^"]+)".*/\1/')"
+    | head -1 | sed -E 's/.*"(https:[^"]+)".*/\1/' || true)"
   [ -n "$download_url" ] || die "No .zip asset found on release $version." 65
 
   if [ "$DRY_RUN" = "1" ]; then
@@ -384,14 +386,16 @@ acquire_from_source_build() {
   # Locate the built .app via the same DerivedData path we asked for.
   local built_app="$REPO_ROOT/build/install-derived/Build/Products/Release/$APP_BUNDLE_NAME"
   if [ ! -d "$built_app" ]; then
-    # Fall back to asking xcodebuild where it put things.
+    # Fall back to asking xcodebuild where it put things. `|| true`: awk
+    # exits on the first match, so xcodebuild can take SIGPIPE, and under
+    # pipefail that would abort before the `die` below could explain why.
     local products_dir
     products_dir="$(cd "$REPO_ROOT" && xcodebuild \
       -scheme "$APP_NAME" \
       -configuration Release \
       -showBuildSettings 2>/dev/null \
       | awk -F' = ' '/^[[:space:]]*BUILT_PRODUCTS_DIR =/ {print $2; exit}' \
-      | sed 's/^ *//;s/ *$//')"
+      | sed 's/^ *//;s/ *$//' || true)"
     built_app="$products_dir/$APP_BUNDLE_NAME"
   fi
   [ -d "$built_app" ] || die "Couldn't find built $APP_BUNDLE_NAME after xcodebuild." 70

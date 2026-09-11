@@ -63,6 +63,35 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Releasing version: $VERSION"
 
+      # Fail before anything is built or published if the tag doesn't match
+      # project.yml, or if the build number isn't newer than what's already
+      # in the feed — Sparkle compares <sparkle:version>, so a stale build
+      # number means every user is told they're "up to date" forever.
+      - name: Check version and build number
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          PROJECT_VERSION=$(awk '/MARKETING_VERSION:/ {gsub(/"/, "", $2); print $2}' project.yml)
+          BUILD_NUMBER=$(awk '/CURRENT_PROJECT_VERSION:/ {gsub(/"/, "", $2); print $2}' project.yml)
+          if [[ "$PROJECT_VERSION" != "$VERSION" ]]; then
+            echo "✗ Releasing $VERSION but project.yml MARKETING_VERSION is $PROJECT_VERSION." >&2
+            exit 1
+          fi
+          if ! [[ "$BUILD_NUMBER" =~ ^[0-9]+$ ]]; then
+            echo "✗ project.yml CURRENT_PROJECT_VERSION '$BUILD_NUMBER' is not a whole number." >&2
+            exit 1
+          fi
+          # Compare against the feed users actually read (main), not this tag's copy.
+          APPCAST=$(git show origin/main:docs/appcast.xml 2>/dev/null || cat docs/appcast.xml)
+          LATEST_BUILD=$(printf '%s\n' "$APPCAST" \
+            | grep -o '<sparkle:version>[0-9]*</sparkle:version>' \
+            | grep -o '[0-9][0-9]*' | sort -n | tail -1 || true)
+          if [[ -n "$LATEST_BUILD" ]] && (( 10#$BUILD_NUMBER <= 10#$LATEST_BUILD )); then
+            echo "✗ CURRENT_PROJECT_VERSION is $BUILD_NUMBER but the appcast already has build $LATEST_BUILD. Bump it in project.yml." >&2
+            exit 1
+          fi
+          echo "✓ $VERSION, build $BUILD_NUMBER (newest published build: ${LATEST_BUILD:-none})"
+
       - name: Decide signing mode
         id: mode
         env:
@@ -283,7 +312,12 @@ jobs:
           item = sys.argv[1]
           path = pathlib.Path("docs/appcast.xml")
           text = path.read_text()
-          new = re.sub(r"(\s*</channel>)", f"\n{item}\\1", text, count=1)
+          # Callable replacement: `item` embeds the release notes, and a string
+          # replacement would parse backslashes in them (`\p` raises, `\1`
+          # splices in a copy of </channel>).
+          new = re.sub(r"(\s*</channel>)", lambda m: "\n" + item + m.group(1), text, count=1)
+          if new == text:
+              sys.exit("docs/appcast.xml has no </channel>; appcast not updated")
           path.write_text(new)
           PY
 
