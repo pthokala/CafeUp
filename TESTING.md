@@ -23,11 +23,14 @@
 | 17 | Trigger remove releases assertion | Core | `TriggerEngineTests` | ✅ unit |
 | 18 | `setEnabled` toggle drives activation | Core | `TriggerEngineTests` | ✅ unit |
 | 19 | Strictest policy wins with multiple active | Core | `TriggerEngineTests` | ✅ unit |
+| 19a | Failed trigger assertion isn't reported active; retried on next change | Core | `TriggerEngineTests` | ✅ unit |
+| 19b | Policy change acquires the new assertion before releasing the old | Core | `TriggerEngineTests` | ✅ unit |
 | 20 | `UserDefaultsTriggerStore` load empty | Services | `UserDefaultsTriggerStoreTests` | ✅ unit |
 | 21 | Save / load roundtrip | Services | `UserDefaultsTriggerStoreTests` | ✅ unit |
 | 22 | Persistence across instances | Services | `UserDefaultsTriggerStoreTests` | ✅ unit |
 | 23 | Save overwrites previous data | Services | `UserDefaultsTriggerStoreTests` | ✅ unit |
-| 24 | Corrupted data returns empty | Services | `UserDefaultsTriggerStoreTests` | ✅ unit |
+| 24 | Corrupted data returns empty, raw bytes backed up | Services | `UserDefaultsTriggerStoreTests` | ✅ unit |
+| 24a | Unreadable entry skipped, others load, entry written back on save | Services | `UserDefaultsTriggerStoreTests` | ✅ unit |
 | 25 | Save empty array persists empty | Services | `UserDefaultsTriggerStoreTests` | ✅ unit |
 | 26 | `TriggerDraft` empty init | Features | `TriggerDraftTests` | ✅ unit |
 | 27 | `TriggerDraft` init from `Trigger` | Features | `TriggerDraftTests` | ✅ unit |
@@ -73,21 +76,26 @@ These can't be unit-tested because they depend on real system state, real Apple 
 - [ ] Run `pmset -g assertions` while trigger active — should show assertion with reason "CafeUp trigger keeping Mac awake".
 
 ### Live timer ticking
-- [ ] Click "5 minutes". Status should show `Awake — 5:00 left` immediately.
-- [ ] Wait, observing the popover stays open. The countdown should tick down once per second: `5:00 → 4:59 → 4:58 ...`.
-- [ ] Close popover, reopen 30 seconds later. Should now show `~4:30 left`.
-- [ ] Wait until 0 — session should auto-stop and the icon should switch to outline.
+- [ ] Choose **Minutes › 5 Minutes**, then open the menu. Under *Current Session Details:* it should read `05m 00s remaining (h:mm AM)`.
+- [ ] Keep the menu open. The countdown ticks once per second: `04m 59s → 04m 58s …`.
+- [ ] Close the menu and reopen it about 30 seconds later. It should read roughly `04m 30s remaining`.
+- [ ] Wait until 0 — the session auto-stops and the icon switches to its idle variant.
 
 ### Persistence across launches
 - [ ] Create a trigger.
 - [ ] Quit CafeUp.
-- [ ] Relaunch. The trigger should appear in the Triggers window.
+- [ ] Relaunch. The trigger should appear in **Settings → Triggers**.
 
-### Popover behavior
-- [ ] Click menu bar icon. Popover opens.
-- [ ] Click outside the popover. Popover closes.
-- [ ] Click "Triggers…" — Triggers window opens.
-- [ ] Click "Quit CafeUp" or press ⌘Q — app terminates.
+### Menu and window behavior
+- [ ] Launch CafeUp. Only the menu-bar icon appears — no window opens on launch.
+- [ ] Click the menu-bar icon. The menu opens.
+- [ ] Click outside the menu (or press Esc). The menu closes.
+- [ ] Choose **Settings…** — the Settings window opens; its **Triggers** tab lists your triggers.
+- [ ] Choose **Other Time/Until › Custom Duration…** and **End at Time…** right after a fresh launch — each opens its window.
+- [ ] Click **Quit CafeUp** or press ⌘Q — app terminates.
+
+### Cold-launch URL commands
+- [ ] Quit CafeUp, then run `cafeup start --minutes 30`. CafeUp launches and the 30-minute session is running (`cafeup status` reports it).
 
 ### Console.app logs (diagnosis aid)
 - [ ] Open Console.app, filter subsystem `com.pardhu.CafeUp`.

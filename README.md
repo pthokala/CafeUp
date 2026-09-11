@@ -88,14 +88,14 @@ Agents compute live remaining time as `endsAt − now` themselves; the file
 doesn't need a second-by-second rewrite.
 
 ### Appearance
-13 menu-bar icon styles (Coffee Cup, Steaming Cup, Mug, Takeout Cup, Coffee Bean, Divided Disc, Divided Circle, Dot, Circle, Pill, Bolt, Eye, Sun). Active and idle variants render distinctly.
+18 menu-bar icon styles (Coffee Cup, Steaming Cup, Mug, Espresso Drop, Bolt, Power Toggle, Flame, Battery, LED Bulb, Desk Lamp, Sun, Moon, Owl, Hexagon, Circle, Pill, Dot, Divided Disc). Active and idle variants render distinctly.
 
 ### Updates
 CafeUp does **not** check for updates automatically. To check, either:
 - Click **Check for Updates…** in the menu bar (under *About CafeUp*), or
 - Open **Settings → General → Updates** and click *Check for Updates Now*.
 
-If a new version is available, [Sparkle](https://sparkle-project.org) downloads it, verifies its EdDSA signature + Apple Developer ID, and installs it on relaunch. The current version is shown in **About CafeUp** and in the Updates section.
+If a new version is available, [Sparkle](https://sparkle-project.org) downloads it, verifies its EdDSA signature against the public key built into CafeUp, and installs it on relaunch. The current version is shown in **About CafeUp** and in the Updates section.
 
 ### Settings window (⌘,)
 Three tabs: **General** (default wake behavior + updates), **Triggers** (CRUD), **Appearance** (icon picker).
@@ -220,7 +220,7 @@ The app installs as a menu-bar-only app (`LSUIElement: true`); look for the cup 
 xcodebuild -scheme CafeUp -configuration Debug test
 ```
 
-180+ unit tests cover the session engine, trigger engine, view models, wake-policy persistence, downloads monitor, idle observer, and live-ticker logic. See [TESTING.md](./TESTING.md) for the per-test matrix.
+270+ unit tests cover the session engine, trigger engine, view models, wake-policy persistence, downloads monitor, idle observer, and live-ticker logic. See [TESTING.md](./TESTING.md) for the per-test matrix.
 
 ---
 
@@ -258,7 +258,7 @@ Full layer breakdown, domain model, persistence format, and IOKit mapping in [SP
 
 ```
 Sources/
-  App/            CafeUpApp, AppDelegate, CompositionRoot, WindowID, intents
+  App/            CafeUpApp, AppDelegate, AuxiliaryWindows, CompositionRoot, WindowID, intents
   Core/           SessionEngine, TriggerEngine
   Domain/         Session, Trigger, WakePolicy, WorldState, value types
   Services/       PowerAssertionService, AppActivityObserver,
@@ -274,21 +274,21 @@ Sources/
     Appearance/   IconPickerView, AppearanceViewModel, glyphs
     Settings/     SettingsView
   Resources/      Info.plist, entitlements
-Tests/            ~180 unit tests + fakes for every protocol service
+Tests/            ~270 unit tests + fakes for every protocol service
 ```
 
 ---
 
 ## Releasing (maintainers)
 
-Releases are EdDSA-signed and notarized; users get them via Sparkle.
+Releases are always EdDSA-signed and delivered via Sparkle. They are Developer ID–signed and notarized only when those secrets are configured — today they aren't, so releases ship ad-hoc signed (see [Signing](#signing)).
 
 ```bash
 # Bump MARKETING_VERSION + CURRENT_PROJECT_VERSION in project.yml, then:
 git tag v0.2.1 && git push origin v0.2.1
 ```
 
-The `release` GitHub Actions workflow builds, signs, notarizes, staples, EdDSA-signs, uploads the zip to a GitHub Release, and commits the appcast entry to `main`. See [SPECS § 20](./SPECS.md#20-update-system) for the full release pipeline and the secrets required.
+The `release` GitHub Actions workflow first checks that the tag matches `MARKETING_VERSION` and that `CURRENT_PROJECT_VERSION` is higher than the newest build in the appcast, then builds, signs (Developer ID + notarization when configured, otherwise ad-hoc), EdDSA-signs, uploads the zip to a GitHub Release, and commits the appcast entry to `main`. See [SPECS § 20](./SPECS.md#20-update-system) for the full release pipeline and the secrets required.
 
 For a local release (without CI), run `scripts/release.sh 0.2.1` — same flow, single machine.
 

@@ -44,7 +44,7 @@ The app is a single binary; there is no companion daemon. Everything runs in the
 
 **Bundle identifier:** `com.pardhu.CafeUp`
 **Bundle display name:** `CafeUp`
-**Version:** `0.2.0 (2)` (`MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` in `project.yml`)
+**Version:** `0.3.0 (3)` (`MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` in `project.yml`)
 
 ---
 
@@ -92,17 +92,18 @@ A 14 × 14 template image rendered from the active `MenuBarIconStyle`. The icon 
 | 10 | `Settings…` (⌘,) | open Settings window |
 | 11 | *separator* | |
 | 12 | `About CafeUp` | `NSApp.orderFrontStandardAboutPanel(nil)` |
-| 13 | `Feedback & Support ›` | submenu: Report an Issue, Project Page |
-| 14 | *separator* | |
-| 15 | `Quit CafeUp` (⌘Q) | `NSApp.terminate(nil)` |
+| 13 | `Check for Updates…` | user-initiated Sparkle check (`UpdaterService.checkForUpdates()`) |
+| 14 | `Feedback & Support ›` | submenu: Report an Issue, Project Page |
+| 15 | *separator* | |
+| 16 | `Quit CafeUp` (⌘Q) | `NSApp.terminate(nil)` |
 
-**Total: 15 items.** Section header at index 1 is a custom `NSMenuItem.view` containing an `NSHostingView` so it renders bolder than NSMenu's default secondary-gray section style.
+**Total: 16 items.** Section header at index 1 is a custom `NSMenuItem.view` containing an `NSHostingView` so it renders bolder than NSMenu's default secondary-gray section style.
 
 ### Active-session menu
 
 Identical to idle, except item **#0** is prepended: a custom `NSMenuItem.view` containing an `NSHostingView<ActiveSessionPanel>`. No native separator follows the panel — the panel renders its own bottom hairline so the visual transition into "Start New Session:" is symmetric with its top.
 
-**Total: 16 items.**
+**Total: 17 items.**
 
 ### Trigger-only menu (triggers active, no manual session)
 
@@ -124,8 +125,8 @@ Then the standard menu follows.
 Both inventories are derived from `SessionPreset.minutePresets` / `.hourPresets`.
 
 #### `Other Time/Until ›`
-- `Custom Duration…` → opens `Window(id: WindowID.customDuration)` with a `CustomDurationView` (Hours stepper 0–24, Minutes stepper 0–59, Cancel + Start).
-- `End at Time…` → opens `Window(id: WindowID.endAtTime)` with an `EndAtTimeView` (`DatePicker(.hourAndMinute)`, Cancel + Start). If the chosen time has already passed today, the start handler adds 1 day so the session ends tomorrow at that time.
+- `Custom Duration…` → opens the Custom Duration window (`AuxiliaryWindows`, id `WindowID.customDuration`) hosting a `CustomDurationView` (Hours stepper 0–24, Minutes stepper 0–59, Cancel + Start).
+- `End at Time…` → opens the End at Time window (`AuxiliaryWindows`, id `WindowID.endAtTime`) hosting an `EndAtTimeView` (`DatePicker(.hourAndMinute)`, Cancel + Start). If the chosen time has already passed today, the start handler adds 1 day so the session ends tomorrow at that time.
 
 #### `While App is Running ›`
 - Top-15 currently running regular apps (sorted alphabetically by localized name; filtered to `NSRunningApplication.activationPolicy == .regular`, excludes CafeUp itself). Each entry starts an indefinite session and arms `AppLifetimeWatcher` for that bundle id.
@@ -206,7 +207,7 @@ ZStack-composed pill:
 - **Right-aligned overlay**: `Text("⌘X")` (12pt, secondary)
 - Background: `RoundedRectangle(cornerRadius: 7)`, `Color.primary.opacity(0.10)` fill, no border
 - Padding: 14pt horizontal, 7pt vertical inside the pill; 10pt horizontal margin from panel edges; 8pt above and below (between the hairlines)
-- ⌘X keyboard shortcut wired via `Button.keyboardShortcut("x", modifiers: .command)`
+- The `⌘X` label is a visual hint only: no key equivalent is wired for it inside the status menu (known limitation — the vestigial `MenuBarView` has the real `keyboardShortcut`, but production never builds that view)
 
 ---
 
@@ -330,7 +331,7 @@ Partial-file extensions watched:
 | `.part` | Firefox |
 | `.partial` | Generic |
 
-Match is case-insensitive. Directory defaults to `FileManager.urls(for: .downloadsDirectory)` and falls back to `~/Downloads`. If the directory is unreadable or missing, `partials(in:)` returns `[]` (so the session immediately stops once `start` is called — current behavior; documented as a known limitation).
+Match is case-insensitive. Directory defaults to `FileManager.urls(for: .downloadsDirectory)` and falls back to `~/Downloads`. If the directory is unreadable or missing, `partials(in:)` returns `[]`, so the first poll (5 s after `start`) sees nothing in flight and stops the session — current behavior; documented as a known limitation.
 
 ### `EndAtTime`
 
@@ -415,7 +416,7 @@ struct WorldState: Sendable {
 
 The trigger engine maintains a single `WorldState` and re-evaluates all triggers whenever any of these sources changes:
 - `AppActivityObserver` — `NSWorkspace.didLaunchApplicationNotification` / `didTerminateApplicationNotification`.
-- `ScheduleObserver` — `TimerScheduleObserver` fires every minute (current time-of-day check).
+- `ScheduleObserver` — `TimerScheduleObserver` fires every 30 seconds (its default `interval`; current time-of-day check).
 - `PowerObserver` — `IOPSPowerObserver` subscribes to `IOPSNotificationCreateRunLoopSource`.
 
 ### Strictest-policy combination
@@ -430,6 +431,12 @@ return triggers.contains { $0.policy == .systemAndDisplay }
 ```
 
 (This logic predates the multi-bool WakePolicy and currently only considers display sleep. Documented as a future cleanup: "strictest" should `AND` all `allow*` bools — the most-restrictive value across active triggers.)
+
+### Assertion failures
+
+`activeTriggerIds` (and therefore the menu's `Awake — N triggers active` line, the active icon, and the green dots in Settings → Triggers) lists satisfied triggers **only while a trigger assertion is actually held**. If `IOPMAssertionCreateWithName` fails, the triggers are reported inactive, the error is logged under `category=triggers`, and the acquire is retried on the next world-state change — at the latest the next `ScheduleObserver` tick.
+
+A policy change (e.g. a `.systemAndDisplay` trigger joining a `.systemOnly` one) acquires the new assertion *before* releasing the old one, so a failed upgrade leaves the existing assertion in place.
 
 ### Trigger CRUD UI
 
@@ -478,15 +485,21 @@ init(from decoder: Decoder) throws {
 
 Triggers persisted before the struct migration continue to load with their previous semantics. Newly-saved triggers use the keyed format.
 
-### Corrupted data
+### Unreadable data
 
-`UserDefaultsTriggerStore.load()` uses `try?` and returns `[]` on any decoding failure. The user effectively starts with no triggers (their stored data remains in defaults — not destroyed — but ignored until manually rewritten).
+`UserDefaultsTriggerStore` decodes the stored array one entry at a time:
+
+- An entry that isn't a valid `Trigger` for this build (written by a newer version with an unknown condition, or damaged) is skipped and logged under `category=triggers`. The other triggers load normally.
+- Skipped entries are kept in memory as raw JSON and written back unchanged, after the known triggers, on every `save`. Editing triggers on an older build therefore never destroys entries it can't read, and they reappear after upgrading again.
+- If the payload isn't a JSON array at all, `load()` returns `[]` and first copies the raw bytes to `com.pardhu.CafeUp.triggers.v1.unreadable`, so the next `save` can't lose them.
 
 ---
 
 ## 11. Settings window
 
-Opened via menu (`Settings…` ⌘,) or `AppDelegate.openWindow(WindowID.settings)`. SwiftUI `Window` scene, `windowResizability(.contentSize)`, min size 560 × 420.
+Opened via the menu (`Settings…` ⌘,) or `AppDelegate.showSettings()`. An AppKit `NSWindow` hosting `SettingsView` in an `NSHostingController`, presented by `AuxiliaryWindows`; resizable, never smaller than the content's 560 × 420 minimum.
+
+CafeUp's windows (Settings, Custom Duration, End at Time) are deliberately **not** SwiftUI `Window` scenes: SwiftUI opens the first declared `Window` scene at launch even in an `LSUIElement` app, which popped Settings open on every start. `CafeUpApp` declares only an empty `Settings` scene (it never opens on its own; its ⌘, command is replaced to call `showSettings()`), and `AuxiliaryWindows` creates each window on demand. A window that was closed is rebuilt on the next open, so the forms start from fresh state.
 
 ### Tabs
 
@@ -548,7 +561,8 @@ CafeUp follows a strict layered architecture; dependencies point downward.
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  App        CafeUpApp · AppDelegate · CompositionRoot       │
-│             AppIntentBridge · WindowID · CafeUpIntents      │
+│             AuxiliaryWindows · WindowID                     │
+│             AppIntentBridge · CafeUpIntents                 │
 ├─────────────────────────────────────────────────────────────┤
 │  Features   MenuBar · Triggers · Appearance · Settings      │  Views + ViewModels
 ├─────────────────────────────────────────────────────────────┤
@@ -582,12 +596,13 @@ Returns an `AppDependencies` struct held by `AppDelegate` for the app's lifetime
 ```
 Sources/
 ├── App/
-│   ├── CafeUpApp.swift          @main, Scene graph (Settings + windows)
-│   ├── AppDelegate.swift        NSApplicationDelegate, status item bootstrap
+│   ├── CafeUpApp.swift          @main; empty Settings scene + ⌘, command
+│   ├── AppDelegate.swift        NSApplicationDelegate, status item, URL routing
+│   ├── AuxiliaryWindows.swift   AppKit windows for Settings / Custom Duration / End at Time
 │   ├── CompositionRoot.swift    DI root
-│   ├── WindowID.swift           Window scene IDs
+│   ├── WindowID.swift           Window identifiers
 │   ├── CafeUpIntents.swift      AppIntent definitions
-│   └── AppIntentBridge.swift    Bridge to SessionEngine
+│   └── AppIntentBridge.swift    Bridge from intents / URLs to the view model
 ├── Core/
 │   ├── SessionEngine.swift
 │   └── TriggerEngine.swift
@@ -596,6 +611,7 @@ Sources/
 │   ├── SessionMode.swift
 │   ├── SessionError.swift
 │   ├── WakePolicy.swift
+│   ├── PolicyUpdate.swift              Partial policy change (URL / intents)
 │   ├── Trigger.swift
 │   ├── TriggerCondition.swift
 │   ├── WorldState.swift
@@ -611,12 +627,18 @@ Sources/
 │   ├── DownloadsMonitor.swift          ~/Downloads polling
 │   ├── UserIdleObserver.swift          CGEventSource idle seconds
 │   ├── PowerObserver.swift             IOPSNotification
-│   ├── ScheduleObserver.swift          Per-minute timer
+│   ├── ScheduleObserver.swift          30-second timer
 │   ├── TriggerStore.swift              UserDefaults JSON
 │   ├── Scheduler.swift                 Task.sleep wrapper
 │   ├── Clock.swift                     Date.now
 │   ├── Logger.swift                    os.Logger
-│   └── IconStylePreferenceStore.swift  UserDefaults
+│   ├── IconStylePreferenceStore.swift  UserDefaults
+│   ├── SessionAlertSounds.swift        Start/end sounds
+│   ├── StatusSnapshot.swift            status.json payload
+│   ├── StatusWriter.swift              Atomic status.json writer
+│   ├── StatusFilePublisher.swift       Observation-driven status.json updates
+│   ├── URLCommandRouter.swift          cafeup:// parsing + dispatch
+│   └── UpdaterService.swift            Sparkle wrapper
 ├── Features/
 │   ├── MenuBar/
 │   │   ├── StatusBarController.swift   NSStatusItem owner
@@ -639,14 +661,16 @@ Sources/
 │   ├── Appearance/
 │   │   ├── IconPickerView.swift
 │   │   ├── AppearanceViewModel.swift
-│   │   ├── CoffeeBeanGlyph.swift
-│   │   ├── DividedCircleGlyph.swift
 │   │   ├── DividedDiscGlyph.swift
 │   │   └── SolidCircleGlyph.swift
+│   ├── Updates/
+│   │   └── UpdatesSectionViewModel.swift
 │   └── Settings/
 │       └── SettingsView.swift          Tabbed window
 └── Resources/
     ├── Info.plist
+    ├── AppIcon.icns
+    ├── cafeup                          Bundled CLI (shell script)
     └── CafeUp.entitlements
 ```
 
@@ -690,7 +714,7 @@ All fakes live under `Tests/Fakes/`.
 
 ## 17. Testing strategy
 
-**180 unit tests** (`xcodebuild test -scheme CafeUp`). All deterministic, all green. No XCUITest layer.
+**273 unit tests** (`xcodebuild test -scheme CafeUp`). All deterministic, all green. No XCUITest layer.
 
 ### Test groups
 
