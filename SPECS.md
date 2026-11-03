@@ -74,7 +74,7 @@ The menu bar item is implemented as a custom `NSStatusItem` (not SwiftUI's `Menu
 
 ### Menu icon
 
-A 14 × 14 template image rendered from the active `MenuBarIconStyle`. The icon swaps between an *idle* and *active* variant based on `MenuBarViewModel.isActive` (true when any manual session OR any trigger is active).
+A 14 × 14 template image rendered from the active `MenuBarIconStyle` (the one exception is the active Bolt Disc, a coloured image). The icon swaps between an *idle* and *active* variant based on `MenuBarViewModel.isActive` (true when any manual session OR any trigger is active).
 
 ### Idle menu (no active session, no active trigger)
 
@@ -522,7 +522,7 @@ All three tabs share the same `MenuBarViewModel` / `TriggersViewModel` / `Appear
 
 ## 12. Appearance / menu-bar icon system
 
-18 icon styles, grouped by theme. Each style has distinct `isActive: true` and `isActive: false` renderings.
+19 icon styles, grouped by theme. Each style has distinct `isActive: true` and `isActive: false` renderings.
 
 | Group | Style | Idle | Active |
 |---|---|---|---|
@@ -531,6 +531,7 @@ All three tabs share the same `MenuBarViewModel` / `TriggersViewModel` / `Appear
 | Coffee | `mug` | `mug` | `mug.fill` |
 | Coffee | `espressoDrop` | `drop` | `drop.fill` |
 | Energy | `bolt` | `bolt` | `bolt.fill` |
+| Energy | `boltDisc` | dimmed disc, quiet bolt (custom) | label-coloured disc, warm gradient bolt (custom) |
 | Energy | `powerToggle` | `power.circle` | `power.circle.fill` |
 | Energy | `flame` | `flame` | `flame.fill` |
 | Energy | `battery` | `battery.0percent` | `battery.100percent` |
@@ -548,6 +549,8 @@ All three tabs share the same `MenuBarViewModel` / `TriggersViewModel` / `Appear
 Default: `cupAndSaucer`.
 
 `dot` and `dividedDisc` are SwiftUI shape glyphs (`SolidCircleGlyph`, `DividedDiscGlyph`). The `MenuBarIconImage.template(for:isActive:)` helper rasterizes them to a template `NSImage` via `ImageRenderer` with `isTemplate = true`. SF-Symbol styles go through `NSImage(systemSymbolName:)` directly so they stay vector at high-DPI.
+
+`boltDisc` shares its geometry (`BoltDisc`) between the picker preview (`BoltDiscGlyph`) and the status item, which draws it with a resolution-independent `NSImage` drawing handler instead of `ImageRenderer`. Its idle state is a template image (a 50% disc with the bolt cut partway out). Its active state is the only **non-template** rendering (`IconRendering.isTemplate`): a disc in `NSColor.labelColor`, resolved at draw time so it follows light/dark, with a warm amber-to-orange bolt. Because it isn't a template, macOS does not invert it on the click highlight.
 
 `battery` is **state-asymmetric**: idle = `battery.0percent` (empty / sleeping), active = `battery.100percent` (full / powered). All other styles use the conventional outline → `.fill` pairing.
 
@@ -670,6 +673,7 @@ Sources/
 │   ├── Appearance/
 │   │   ├── IconPickerView.swift
 │   │   ├── AppearanceViewModel.swift
+│   │   ├── BoltDiscGlyph.swift
 │   │   ├── DividedDiscGlyph.swift
 │   │   └── SolidCircleGlyph.swift
 │   ├── Updates/
@@ -743,7 +747,7 @@ All fakes live under `Tests/Fakes/`.
 | Downloads monitor | `DownloadsMonitorTests` | partial-extension detection (Safari, Chrome, Firefox, generic), case-insensitivity, missing directory |
 | Domain value types | `SessionTests`, `SessionPresetTests`, `WorldStateTests`, `PowerSourceTests`, `TimeOfDayTests`, `TimeRangeTests`, `WeekdayTests` | invariants, equality, edge cases |
 | Formatter | `RemainingFormatterTests` | M:SS / H:MM:SS / verbose `MMm SSs remaining` / clock time |
-| Appearance | `MenuBarIconStyleTests`, `IconStylePreferenceStoreTests`, `AppearanceViewModelTests` | rendering per active state, persistence |
+| Appearance | `MenuBarIconStyleTests`, `MenuBarIconImageTests`, `IconStylePreferenceStoreTests`, `AppearanceViewModelTests` | rendering per active state, template vs coloured status image, persistence |
 | Wake-policy persistence | `WakePolicyStoreTests`, `MenuBarViewModelTests` | UserDefaults roundtrip, corrupt data, load at init, save on change |
 
 ### Live verification

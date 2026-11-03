@@ -57,6 +57,7 @@
 		6969A09C64100971DB9D87F6 /* MenuBarViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94C177CF15596ABC0D07A81C /* MenuBarViewModel.swift */; };
 		6A1E03FFAB6D9C044E9FF76E /* StatusBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 028EF90250CDC1FFBDFE54A2 /* StatusBarController.swift */; };
 		6BE6570F51A0D0C55CD38FF3 /* FakeUpdaterService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 626CFCEB1A862A4846142380 /* FakeUpdaterService.swift */; };
+		6CD0C53A965090DE089272C0 /* BoltDiscGlyph.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DC5FB4C7888B74D554AA6A4 /* BoltDiscGlyph.swift */; };
 		6DB0715C63249C66FE23A6E8 /* CafeUpApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EBAE91FAE6E7E1E18117D0F /* CafeUpApp.swift */; };
 		729AA52757BC2695259C7760 /* RemainingFormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD72A324C7D29ED8798764F3 /* RemainingFormatterTests.swift */; };
 		734D1F1804F97148EDE94EB1 /* FakeUserIdleObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F56B5D9D56703BCB9D3A4DF /* FakeUserIdleObserver.swift */; };
@@ -85,6 +86,7 @@
 		A1DD3BD13765E7E1D5BCA8E5 /* FakeAppLifetimeWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE428D233960BDC175E02DD6 /* FakeAppLifetimeWatcher.swift */; };
 		A56326CA0AAE0C146C10A48D /* CafeUpIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C653B585DF4B6B3528D243F /* CafeUpIntents.swift */; };
 		A675B9D06F0F52748405CBE5 /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D00B6D42F59ED9644434D80 /* Session.swift */; };
+		AD0A7D7AA7EDF4B7321F0A1F /* MenuBarIconImageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A06E4CC1CF83A27BC66E6BB4 /* MenuBarIconImageTests.swift */; };
 		AD135F88B719CC8841F0B745 /* PowerAssertionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69C1AB8BB72E112C5D985538 /* PowerAssertionService.swift */; };
 		AE5A1B188032D29078EBA44D /* MenuBarIconStyleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0191D4030ECAF43B83C3339 /* MenuBarIconStyleTests.swift */; };
 		B505625184664F7FBB3CC16E /* WeekdayTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C657C5254FB90BCF490CB9C9 /* WeekdayTests.swift */; };
@@ -199,6 +201,7 @@
 		691068D02528E968BD96FBC0 /* IconStylePreferenceStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconStylePreferenceStoreTests.swift; sourceTree = "<group>"; };
 		69C1AB8BB72E112C5D985538 /* PowerAssertionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowerAssertionService.swift; sourceTree = "<group>"; };
 		69CC1BE1A64D441D6EAFCA0D /* FakePowerObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FakePowerObserver.swift; sourceTree = "<group>"; };
+		6DC5FB4C7888B74D554AA6A4 /* BoltDiscGlyph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoltDiscGlyph.swift; sourceTree = "<group>"; };
 		706999F3405F06D5D78D79BB /* Clock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Clock.swift; sourceTree = "<group>"; };
 		751CB2CFF2B219ADF766F15C /* UserDefaultsTriggerStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDefaultsTriggerStoreTests.swift; sourceTree = "<group>"; };
 		76B47B1A5505E73883E0145F /* Weekday.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Weekday.swift; sourceTree = "<group>"; };
@@ -218,6 +221,7 @@
 		992F6C8D08CE37798EAA2FCA /* ActiveSessionPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveSessionPanel.swift; sourceTree = "<group>"; };
 		9A8AA8ED119730602B4602C7 /* ClosureMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClosureMenuItem.swift; sourceTree = "<group>"; };
 		9EBAE91FAE6E7E1E18117D0F /* CafeUpApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeUpApp.swift; sourceTree = "<group>"; };
+		A06E4CC1CF83A27BC66E6BB4 /* MenuBarIconImageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarIconImageTests.swift; sourceTree = "<group>"; };
 		A3C2114D00F2D1BBAA2491BF /* TriggerDraft.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TriggerDraft.swift; sourceTree = "<group>"; };
 		A56F9461F6B666E1ED163CEC /* WakePolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WakePolicy.swift; sourceTree = "<group>"; };
 		A80E3F2DDBDCD2BE58DADB71 /* SessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTests.swift; sourceTree = "<group>"; };
@@ -311,6 +315,7 @@
 			isa = PBXGroup;
 			children = (
 				B09FC3298A309B490C270E39 /* AppearanceViewModel.swift */,
+				6DC5FB4C7888B74D554AA6A4 /* BoltDiscGlyph.swift */,
 				35C68D8A9DA35A540E6EA682 /* DividedDiscGlyph.swift */,
 				1B787C3467606EB68A7B2E94 /* IconPickerView.swift */,
 				22A2C797EBD3352E24EC1C18 /* SolidCircleGlyph.swift */,
@@ -474,6 +479,7 @@
 				1EAF1B0139BE9C5D26CCAC91 /* DownloadsMonitorTests.swift */,
 				A9503F8A6CB7DD3CD04E11C7 /* FileSystemStatusWriterTests.swift */,
 				691068D02528E968BD96FBC0 /* IconStylePreferenceStoreTests.swift */,
+				A06E4CC1CF83A27BC66E6BB4 /* MenuBarIconImageTests.swift */,
 				D0191D4030ECAF43B83C3339 /* MenuBarIconStyleTests.swift */,
 				B3CE251C78C94D5CF495C4D2 /* MenuBarViewModelAutoStopTests.swift */,
 				1719D7F7BABE901960DE7E7D /* MenuBarViewModelScreenSaverTests.swift */,
@@ -639,6 +645,7 @@
 				DDD52D821915157BB77A9BE7 /* InMemoryIconStyleStore.swift in Sources */,
 				DFAE6EBA6EB9BDD3EC5CDE81 /* InMemoryTriggerStore.swift in Sources */,
 				EE3CC66E5FB0528E9B427129 /* InMemoryWakePolicyStore.swift in Sources */,
+				AD0A7D7AA7EDF4B7321F0A1F /* MenuBarIconImageTests.swift in Sources */,
 				AE5A1B188032D29078EBA44D /* MenuBarIconStyleTests.swift in Sources */,
 				2C6AB323089166AE64174858 /* MenuBarViewModelAutoStopTests.swift in Sources */,
 				B638B3282AE2DF4852D06033 /* MenuBarViewModelScreenSaverTests.swift in Sources */,
@@ -681,6 +688,7 @@
 				E43CF2AE7DAC67257F437F1A /* AppPicker.swift in Sources */,
 				2004BBF63DC15B126A311638 /* AppearanceViewModel.swift in Sources */,
 				193C955497062664BE126835 /* AuxiliaryWindows.swift in Sources */,
+				6CD0C53A965090DE089272C0 /* BoltDiscGlyph.swift in Sources */,
 				6DB0715C63249C66FE23A6E8 /* CafeUpApp.swift in Sources */,
 				A56326CA0AAE0C146C10A48D /* CafeUpIntents.swift in Sources */,
 				D2ED23A640407835889100BB /* Clock.swift in Sources */,

@@ -46,10 +46,12 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     /// macOS handle the click-state highlight correctly (inverting the icon against
     /// the selection background). A previous version of this controller embedded
     /// an `NSHostingView<MenuBarIcon>` as a button subview, which caused filled
-    /// symbols to render as solid dark blobs on the highlight.
+    /// symbols to render as solid dark blobs on the highlight. (The active Bolt Disc
+    /// is deliberately not a template, so it keeps its colour; it stays as drawn
+    /// when highlighted.)
     private func installIcon() {
         guard let button = statusItem.button else { return }
-        button.image = MenuBarIconImage.template(
+        button.image = MenuBarIconImage.statusItemImage(
             for: appearanceViewModel.iconStyle,
             isActive: viewModel.isActive
         )
@@ -71,7 +73,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     }
 
     private func refreshIcon() {
-        statusItem.button?.image = MenuBarIconImage.template(
+        statusItem.button?.image = MenuBarIconImage.statusItemImage(
             for: appearanceViewModel.iconStyle,
             isActive: viewModel.isActive
         )
