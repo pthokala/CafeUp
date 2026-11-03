@@ -7,7 +7,6 @@ enum MenuBarIconStyle: String, Codable, CaseIterable, Identifiable, Sendable {
 
     // Energy / power
     case bolt
-    case boltDisc
     case powerToggle
     case flame
     case battery
@@ -27,6 +26,7 @@ enum MenuBarIconStyle: String, Codable, CaseIterable, Identifiable, Sendable {
     case pill
     case dot
     case dividedDisc
+    case waveRing
 
     var id: String { rawValue }
 
@@ -39,7 +39,6 @@ enum MenuBarIconStyle: String, Codable, CaseIterable, Identifiable, Sendable {
         case .mug:           return "Mug"
         case .espressoDrop:  return "Espresso Drop"
         case .bolt:          return "Bolt"
-        case .boltDisc:      return "Bolt Disc"
         case .powerToggle:   return "Power Toggle"
         case .flame:         return "Flame"
         case .battery:       return "Battery"
@@ -53,6 +52,7 @@ enum MenuBarIconStyle: String, Codable, CaseIterable, Identifiable, Sendable {
         case .pill:          return "Pill"
         case .dot:           return "Dot"
         case .dividedDisc:   return "Divided Disc 1"
+        case .waveRing:      return "Wave Ring"
         }
     }
 
@@ -63,8 +63,8 @@ enum MenuBarIconStyle: String, Codable, CaseIterable, Identifiable, Sendable {
             return .solidCircle(isFilled: isActive)
         case .dividedDisc:
             return .dividedDisc(orientation: isActive ? .vertical : .horizontal)
-        case .boltDisc:
-            return .boltDisc(isActive: isActive)
+        case .waveRing:
+            return .waveRing(isActive: isActive)
 
         // SF Symbol pairs (idle outline → active fill)
         case .cupAndSaucer:
@@ -112,12 +112,12 @@ enum IconRendering: Hashable, Sendable {
     case symbol(String)
     case solidCircle(isFilled: Bool)
     case dividedDisc(orientation: DividerOrientation)
-    case boltDisc(isActive: Bool)
+    case waveRing(isActive: Bool)
 
     /// Whether the status item should draw this as a template image (one colour, tinted by
-    /// macOS). The active Bolt Disc has a coloured bolt, so it can't be one.
+    /// macOS). The active Wave Ring has a blue wave, so it can't be one.
     var isTemplate: Bool {
-        if case .boltDisc(isActive: true) = self { return false }
+        if case .waveRing(isActive: true) = self { return false }
         return true
     }
 }

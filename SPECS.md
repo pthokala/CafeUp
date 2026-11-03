@@ -74,7 +74,7 @@ The menu bar item is implemented as a custom `NSStatusItem` (not SwiftUI's `Menu
 
 ### Menu icon
 
-A 14 × 14 template image rendered from the active `MenuBarIconStyle` (the one exception is the active Bolt Disc, a coloured image). The icon swaps between an *idle* and *active* variant based on `MenuBarViewModel.isActive` (true when any manual session OR any trigger is active).
+A 14 × 14 template image rendered from the active `MenuBarIconStyle` (the one exception is the active Wave Ring, which has a blue wave). The icon swaps between an *idle* and *active* variant based on `MenuBarViewModel.isActive` (true when any manual session OR any trigger is active).
 
 ### Idle menu (no active session, no active trigger)
 
@@ -531,7 +531,6 @@ All three tabs share the same `MenuBarViewModel` / `TriggersViewModel` / `Appear
 | Coffee | `mug` | `mug` | `mug.fill` |
 | Coffee | `espressoDrop` | `drop` | `drop.fill` |
 | Energy | `bolt` | `bolt` | `bolt.fill` |
-| Energy | `boltDisc` | bright disc, bolt cut out (custom) | same disc, warm gradient bolt (custom) |
 | Energy | `powerToggle` | `power.circle` | `power.circle.fill` |
 | Energy | `flame` | `flame` | `flame.fill` |
 | Energy | `battery` | `battery.0percent` | `battery.100percent` |
@@ -545,12 +544,13 @@ All three tabs share the same `MenuBarViewModel` / `TriggersViewModel` / `Appear
 | Abstract | `pill` | `pill` | `pill.fill` |
 | Abstract | `dot` | hollow circle (custom) | filled circle (custom) |
 | Abstract | `dividedDisc` | horizontal split (custom) | vertical split (custom) |
+| Abstract | `waveRing` | white ring and wave (custom) | white ring, blue wave (custom) |
 
 Default: `cupAndSaucer`.
 
 `dot` and `dividedDisc` are SwiftUI shape glyphs (`SolidCircleGlyph`, `DividedDiscGlyph`). The `MenuBarIconImage.template(for:isActive:)` helper rasterizes them to a template `NSImage` via `ImageRenderer` with `isTemplate = true`. SF-Symbol styles go through `NSImage(systemSymbolName:)` directly so they stay vector at high-DPI.
 
-`boltDisc` shares its geometry (`BoltDisc`) between the picker preview (`BoltDiscGlyph`) and the status item, which draws it with a resolution-independent `NSImage` drawing handler instead of `ImageRenderer`. Its idle state is a template image (an 85% disc with the bolt cut almost out, keeping 10% of the disc tone). Its active state is the same disc and bolt, but the bolt is a warm amber-to-orange gradient, so it is the only **non-template** rendering (`IconRendering.isTemplate`): the disc is drawn in `NSColor.labelColor` at the same 85% opacity, resolved at draw time so it follows light/dark. Because it isn't a template, macOS does not invert it on the click highlight. Shapes are built with path booleans (`CGPath.subtracting`/`union`) rather than blend modes, so drawing doesn't depend on what the destination already contains.
+`waveRing` shares its geometry (`WaveRing`) between the picker preview (`WaveRingGlyph`) and the status item, which draws it with a resolution-independent `NSImage` drawing handler instead of `ImageRenderer`. Its idle state is a template image: a ring with a sine-wave liquid filling its lower half, drawn in one tone at 85% opacity so macOS tints it for light/dark bars and the click highlight. Its active state is the only **non-template** rendering (`IconRendering.isTemplate`): the ring is drawn in `NSColor.labelColor`, resolved at draw time so it follows light/dark, and the wave is an electric-blue (cyan to blue) gradient. Because it isn't a template, macOS does not invert it on the click highlight. Shapes are built with path booleans (`CGPath.subtracting`/`union`/`intersection`) rather than blend modes, so drawing doesn't depend on what the destination already contains.
 
 `battery` is **state-asymmetric**: idle = `battery.0percent` (empty / sleeping), active = `battery.100percent` (full / powered). All other styles use the conventional outline → `.fill` pairing.
 
@@ -673,9 +673,9 @@ Sources/
 │   ├── Appearance/
 │   │   ├── IconPickerView.swift
 │   │   ├── AppearanceViewModel.swift
-│   │   ├── BoltDiscGlyph.swift
 │   │   ├── DividedDiscGlyph.swift
-│   │   └── SolidCircleGlyph.swift
+│   │   ├── SolidCircleGlyph.swift
+│   │   └── WaveRingGlyph.swift
 │   ├── Updates/
 │   │   └── UpdatesSectionViewModel.swift
 │   └── Settings/
@@ -763,6 +763,7 @@ The active-session menu UI lives inside `NSHostingView`, which doesn't expose Bu
 | Trigger JSON schema | New keys default to safe values on decode; legacy keys are honored |
 | `WakePolicy` enum → struct | `init(from decoder:)` first tries single-value String container for legacy `"systemOnly"`/`"systemAndDisplay"` |
 | Icon style enum cases added | New cases append; raw values are stable strings |
+| Icon style renamed (`boltDisc` → `waveRing`) | `UserDefaultsIconStylePreferenceStore` maps the old raw value to the new style, so a saved choice survives |
 
 There is no schema-version file; backward compatibility is built into each decoder.
 

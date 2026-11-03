@@ -105,8 +105,8 @@ private struct IconStylePreview: View {
                 SolidCircleGlyph(isFilled: isFilled)
             case .dividedDisc(let orientation):
                 DividedDiscGlyph(orientation: orientation)
-            case .boltDisc(let isActive):
-                BoltDiscGlyph(isActive: isActive)
+            case .waveRing(let isActive):
+                WaveRingGlyph(isActive: isActive)
             }
         }
         .frame(width: 32, height: 32)
