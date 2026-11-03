@@ -42,7 +42,8 @@ enum CompositionRoot {
             triggerEngine: triggerEngine,
             appLifetimeWatcher: NSWorkspaceAppLifetimeWatcher(),
             downloadsMonitor: FileSystemDownloadsMonitor(),
-            idleObserver: CGEventSourceIdleObserver()
+            idleObserver: CGEventSourceIdleObserver(),
+            policyStore: UserDefaultsWakePolicyStore()
         )
 
         // The bridge needs the view model (not just the engine) so agent commands

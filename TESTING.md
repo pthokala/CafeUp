@@ -59,6 +59,12 @@
 | 50 | `Session` model fields | Domain | `SessionTests` | ✅ unit |
 | 51 | `SessionMode.duration` accessor | Domain | `SessionTests` | ✅ unit |
 | 52 | `WorldState.empty` / equality | Domain | `WorldStateTests` | ✅ unit |
+| 53 | `UserDefaultsWakePolicyStore` empty / roundtrip / persistence / overwrite / corrupt data | Services | `WakePolicyStoreTests` | ✅ unit |
+| 54 | `MenuBarViewModel` loads saved policy at init | ViewModels | `MenuBarViewModelTests` | ✅ unit |
+| 55 | `MenuBarViewModel` saves policy on change (idle and active), not on same value | ViewModels | `MenuBarViewModelTests` | ✅ unit |
+| 56 | Trigger with lid-closed policy acquires `PreventSystemSleep` policy | Core | `TriggerEngineTests` | ✅ unit |
+| 57 | Strictest policy ANDs display and lid flags across active triggers | Core | `TriggerEngineTests` | ✅ unit |
+| 58 | Lid-closed trigger deactivating drops the lid assertion | Core | `TriggerEngineTests` | ✅ unit |
 
 ## Coverage that requires manual verification
 
@@ -74,6 +80,10 @@ These can't be unit-tested because they depend on real system state, real Apple 
 - [ ] With the app running, open CafeUp. Trigger row should show a green dot.
 - [ ] Quit Safari. Green dot should turn gray within ~1 second.
 - [ ] Run `pmset -g assertions` while trigger active — should show assertion with reason "CafeUp trigger keeping Mac awake".
+
+### Lid closed and saved policy
+- [ ] With **Allow system sleep when display is closed** unchecked and the Mac on AC power, `pmset -g assertions | grep CafeUp` lists `PreventSystemSleep`. Close the lid: the Mac stays awake (e.g. `ping` to it keeps answering).
+- [ ] Quit and relaunch CafeUp. The checkbox states (Settings → General, Quick Settings) match what you left them at.
 
 ### Live timer ticking
 - [ ] Choose **Minutes › 5 Minutes**, then open the menu. Under *Current Session Details:* it should read `05m 00s remaining (h:mm AM)`.

@@ -73,6 +73,11 @@ struct ActiveSessionPanel: View {
                     set: { viewModel.policy.allowSystemSleepWhenLidClosed = $0 }
                 )
             )
+            Text(WakePolicy.lidClosedAwakeNote)
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.leading, 28)
             CheckboxRow(
                 title: "Allow screen saver after 45m of inactivity",
                 isOn: Binding(

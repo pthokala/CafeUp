@@ -13,10 +13,17 @@ struct TriggerEditorView: View {
 
             Form {
                 TextField("Name", text: $draft.name)
-                Picker("Wake policy", selection: $draft.policy) {
-                    Text("System only").tag(WakePolicy.systemOnly)
-                    Text("System and display").tag(WakePolicy.systemAndDisplay)
+                Picker("Wake policy", selection: $draft.policy.allowDisplaySleep) {
+                    Text("System only").tag(true)
+                    Text("System and display").tag(false)
                 }
+                Toggle("Keep awake with the lid closed", isOn: Binding(
+                    get: { !draft.policy.allowSystemSleepWhenLidClosed },
+                    set: { draft.policy.allowSystemSleepWhenLidClosed = !$0 }
+                ))
+                Text("macOS honors this on AC power only.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 Toggle("Enabled", isOn: $draft.isEnabled)
             }
             .formStyle(.grouped)

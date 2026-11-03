@@ -117,9 +117,18 @@ final class TriggerEngine {
         }
     }
 
+    /// The most restrictive combination of every satisfied trigger's policy: a sleep is
+    /// allowed only if every active trigger allows it. The screen-saver release isn't
+    /// applied to trigger assertions, so it's always cleared here.
     private func strictestPolicy(of triggers: [Trigger]) -> WakePolicy? {
         guard !triggers.isEmpty else { return nil }
-        return triggers.contains { $0.policy == .systemAndDisplay } ? .systemAndDisplay : .systemOnly
+        return triggers.reduce(WakePolicy.systemOnly) { combined, trigger in
+            WakePolicy(
+                allowDisplaySleep: combined.allowDisplaySleep && trigger.policy.allowDisplaySleep,
+                allowSystemSleepWhenLidClosed: combined.allowSystemSleepWhenLidClosed
+                    && trigger.policy.allowSystemSleepWhenLidClosed
+            )
+        }
     }
 
     private func acquireAssertion(policy: WakePolicy) {
