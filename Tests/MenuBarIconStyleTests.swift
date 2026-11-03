@@ -32,8 +32,8 @@ final class MenuBarIconStyleTests: XCTestCase {
         }
     }
 
-    func test_default_isCupAndSaucer() {
-        XCTAssertEqual(MenuBarIconStyle.default, .cupAndSaucer)
+    func test_default_isCupAndSteam() {
+        XCTAssertEqual(MenuBarIconStyle.default, .cupAndSteam)
     }
 
     func test_codableRoundtrip() throws {
@@ -44,29 +44,7 @@ final class MenuBarIconStyleTests: XCTestCase {
         }
     }
 
-    // MARK: - Custom shape glyphs
-
-    func test_dot_activeFilledIdleHollow() {
-        XCTAssertEqual(
-            MenuBarIconStyle.dot.rendering(isActive: true),
-            .solidCircle(isFilled: true)
-        )
-        XCTAssertEqual(
-            MenuBarIconStyle.dot.rendering(isActive: false),
-            .solidCircle(isFilled: false)
-        )
-    }
-
-    func test_dividedDisc_activeUsesVerticalIdleUsesHorizontal() {
-        XCTAssertEqual(
-            MenuBarIconStyle.dividedDisc.rendering(isActive: true),
-            .dividedDisc(orientation: .vertical)
-        )
-        XCTAssertEqual(
-            MenuBarIconStyle.dividedDisc.rendering(isActive: false),
-            .dividedDisc(orientation: .horizontal)
-        )
-    }
+    // MARK: - Custom glyph
 
     func test_waveRing_carriesActiveStateInRendering() {
         XCTAssertEqual(MenuBarIconStyle.waveRing.rendering(isActive: true),  .waveRing(isActive: true))
@@ -103,11 +81,6 @@ final class MenuBarIconStyleTests: XCTestCase {
         XCTAssertEqual(MenuBarIconStyle.espressoDrop.rendering(isActive: true),  .symbol("drop.fill"))
     }
 
-    func test_powerToggle_usesPowerCircleSymbolWithFillSwap() {
-        XCTAssertEqual(MenuBarIconStyle.powerToggle.rendering(isActive: false), .symbol("power.circle"))
-        XCTAssertEqual(MenuBarIconStyle.powerToggle.rendering(isActive: true),  .symbol("power.circle.fill"))
-    }
-
     func test_ledBulb_usesLightbulbLedSymbolWithFillSwap() {
         XCTAssertEqual(MenuBarIconStyle.ledBulb.rendering(isActive: false), .symbol("lightbulb.led"))
         XCTAssertEqual(MenuBarIconStyle.ledBulb.rendering(isActive: true),  .symbol("lightbulb.led.fill"))
@@ -120,11 +93,6 @@ final class MenuBarIconStyleTests: XCTestCase {
         XCTAssertEqual(MenuBarIconStyle.flame.rendering(isActive: true),  .symbol("flame.fill"))
     }
 
-    func test_hexagon_usesHexagonSymbolWithFillSwap() {
-        XCTAssertEqual(MenuBarIconStyle.hexagon.rendering(isActive: false), .symbol("hexagon"))
-        XCTAssertEqual(MenuBarIconStyle.hexagon.rendering(isActive: true),  .symbol("hexagon.fill"))
-    }
-
     func test_deskLamp_usesLampDeskSymbolWithFillSwap() {
         XCTAssertEqual(MenuBarIconStyle.deskLamp.rendering(isActive: false), .symbol("lamp.desk"))
         XCTAssertEqual(MenuBarIconStyle.deskLamp.rendering(isActive: true),  .symbol("lamp.desk.fill"))
@@ -133,13 +101,6 @@ final class MenuBarIconStyleTests: XCTestCase {
     func test_moon_usesMoonSymbolWithFillSwap() {
         XCTAssertEqual(MenuBarIconStyle.moon.rendering(isActive: false), .symbol("moon"))
         XCTAssertEqual(MenuBarIconStyle.moon.rendering(isActive: true),  .symbol("moon.fill"))
-    }
-
-    func test_owl_usesBirdSymbolWithFillSwap() {
-        // SF Symbols has no dedicated owl; `bird` is the closest perched-silhouette
-        // stand-in.
-        XCTAssertEqual(MenuBarIconStyle.owl.rendering(isActive: false), .symbol("bird"))
-        XCTAssertEqual(MenuBarIconStyle.owl.rendering(isActive: true),  .symbol("bird.fill"))
     }
 
     func test_battery_idleIsEmptyActiveIsFull() {

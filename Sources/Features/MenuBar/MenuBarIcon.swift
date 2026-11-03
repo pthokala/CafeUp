@@ -14,10 +14,6 @@ struct MenuBarIcon: View {
             switch style.rendering(isActive: isActive) {
             case .symbol(let name):
                 Image(systemName: name)
-            case .solidCircle(let isFilled):
-                SolidCircleGlyph(isFilled: isFilled)
-            case .dividedDisc(let orientation):
-                DividedDiscGlyph(orientation: orientation)
             case .waveRing(let isActive):
                 WaveRingGlyph(isActive: isActive)
             }
@@ -35,15 +31,13 @@ struct MenuBarIcon: View {
 /// user clicks it. For a properly-marked template image (`isTemplate = true`),
 /// AppKit inverts the icon's colors against the highlight so the symbol stays
 /// readable. An `NSHostingView` subview is treated as opaque content — the
-/// highlight draws *behind* it, leaving filled shapes (e.g. `moon.zzz.fill`,
-/// `power.circle.fill`) sitting as solid dark blobs on the dark blue highlight.
+/// highlight draws *behind* it, leaving filled shapes (e.g. `moon.fill`,
+/// `drop.fill`) sitting as solid dark blobs on the dark blue highlight.
 ///
 /// SF Symbols go through `NSImage(systemSymbolName:)` directly so they remain
-/// vectors at high-DPI. Custom shape glyphs are rasterized with SwiftUI's
-/// `ImageRenderer` at the screen scale; the resulting bitmap is still a valid
-/// template image because every pixel is either black or transparent. The Wave Ring
-/// is the exception: it is drawn with a resolution-independent drawing handler, which
-/// re-runs per appearance and screen scale, and its idle state uses partial alpha.
+/// vectors at high-DPI. The Wave Ring is the one custom glyph: it is drawn with a
+/// resolution-independent drawing handler, which re-runs per appearance and screen
+/// scale, and its idle state uses partial alpha.
 @MainActor
 enum MenuBarIconImage {
     /// Optical size of the icon inside the 22pt status-item button. Matches
@@ -66,12 +60,6 @@ enum MenuBarIconImage {
             return NSImage(systemSymbolName: name, accessibilityDescription: nil)?
                 .withSymbolConfiguration(config)
 
-        case .solidCircle(let isFilled):
-            return rasterize(SolidCircleGlyph(isFilled: isFilled))
-
-        case .dividedDisc(let orientation):
-            return rasterize(DividedDiscGlyph(orientation: orientation))
-
         case .waveRing(let isActive):
             return NSImage(size: NSSize(width: pointSize, height: pointSize), flipped: true) { rect in
                 guard let context = NSGraphicsContext.current?.cgContext else { return false }
@@ -79,16 +67,6 @@ enum MenuBarIconImage {
                 return true
             }
         }
-    }
-
-    private static func rasterize<Content: View>(_ glyph: Content) -> NSImage? {
-        let renderer = ImageRenderer(
-            content: glyph
-                .frame(width: pointSize, height: pointSize)
-                .foregroundStyle(Color.black)
-        )
-        renderer.scale = NSScreen.main?.backingScaleFactor ?? 2
-        return renderer.nsImage
     }
 
     private static func fallback() -> NSImage {

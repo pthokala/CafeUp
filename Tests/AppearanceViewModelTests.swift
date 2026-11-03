@@ -21,10 +21,10 @@ final class AppearanceViewModelTests: XCTestCase {
     }
 
     func test_settingSameStyle_isNoOp() {
-        let store = InMemoryIconStyleStore(initial: .mug)
+        let store = InMemoryIconStyleStore(initial: .moon)
         let vm = AppearanceViewModel(store: store)
 
-        vm.iconStyle = .mug
+        vm.iconStyle = .moon
 
         XCTAssertEqual(store.saveCount, 0)
     }

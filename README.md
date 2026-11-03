@@ -90,7 +90,7 @@ Agents compute live remaining time as `endsAt − now` themselves; the file
 doesn't need a second-by-second rewrite.
 
 ### Appearance
-19 menu-bar icon styles (Coffee Cup, Steaming Cup, Mug, Espresso Drop, Bolt, Power Toggle, Flame, Battery, LED Bulb, Desk Lamp, Sun, Moon, Owl, Hexagon, Circle, Pill, Dot, Divided Disc 1, Wave Ring). Active and idle variants render distinctly.
+11 menu-bar icon styles (Steaming Cup, Espresso Drop, Bolt, Flame, Battery, LED Bulb, Desk Lamp, Sun, Moon, Circle, Wave Ring). Active and idle variants render distinctly.
 
 ### Updates
 CafeUp does **not** check for updates automatically. To check, either:
