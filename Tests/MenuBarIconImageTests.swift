@@ -19,77 +19,91 @@ final class MenuBarIconImageTests: XCTestCase {
         }
     }
 
-    // MARK: - Bolt Disc geometry
+    // MARK: - Wave Ring geometry
 
-    func test_boltPath_isCentredAndSizedToTheDisc() {
-        let box = BoltDisc.boltPath(in: CGRect(x: 0, y: 0, width: side, height: side)).boundingBox
-        let expectedHeight = CGFloat(side) * BoltDisc.boltHeightRatio
+    func test_ringAndWave_dontOverlapAndStayInsideTheCircle() {
+        let rect = CGRect(x: 0, y: 0, width: side, height: side)
+        let ring = WaveRing.ringPath(in: rect)
+        let wave = WaveRing.liquidPath(in: rect)
+        let center = CGFloat(side) / 2
 
-        XCTAssertEqual(box.midX, CGFloat(side) / 2, accuracy: 1)
-        XCTAssertEqual(box.midY, CGFloat(side) / 2, accuracy: 1)
-        // the corner-softening stroke adds a hair to the outline
-        XCTAssertEqual(box.height, expectedHeight, accuracy: expectedHeight * 0.04)
+        var overlaps = 0, outside = 0, ringPixels = 0, wavePixels = 0
+        for x in 0..<side {
+            for y in 0..<side {
+                let p = CGPoint(x: CGFloat(x) + 0.5, y: CGFloat(y) + 0.5)
+                let inRing = ring.contains(p), inWave = wave.contains(p)
+                if inRing { ringPixels += 1 }
+                if inWave { wavePixels += 1 }
+                if inRing && inWave { overlaps += 1 }
+                if (inRing || inWave) && hypot(p.x - center, p.y - center) > center + 0.5 { outside += 1 }
+            }
+        }
+        XCTAssertEqual(overlaps, 0, "the wave should keep clear of the ring")
+        XCTAssertEqual(outside, 0)
+        XCTAssertGreaterThan(ringPixels, 1_500)
+        XCTAssertGreaterThan(wavePixels, 1_500)
     }
 
-    // MARK: - Bolt Disc pixels
+    func test_wave_fillsOnlyTheLowerHalf() {
+        let box = WaveRing.liquidPath(in: CGRect(x: 0, y: 0, width: side, height: side)).boundingBox
+        XCTAssertGreaterThan(box.minY, CGFloat(side) / 2, "the wave's surface should sit below the centre")
+    }
 
-    func test_activeBoltDisc_hasWarmGradientBoltOnALabelColouredDisc() {
-        let image = MenuBarIconImage.statusItemImage(for: .boltDisc, isActive: true)
-        let (top, bottom) = boltSamplePoints()
+    // MARK: - Wave Ring pixels
+
+    func test_activeWaveRing_hasALabelColouredRingAndABlueWave() {
+        let image = MenuBarIconImage.statusItemImage(for: .waveRing, isActive: true)
+        XCTAssertTrue(WaveRing.liquidPath(in: CGRect(x: 0, y: 0, width: side, height: side))
+            .contains(CGPoint(x: Double(wavePoint.x) + 0.5, y: Double(wavePoint.y) + 0.5)), "test point should be in the wave")
 
         let onDark = render(image, appearance: .darkAqua)
-        let darkDisc = onDark.colorAt(x: discOnlyPoint.x, y: discOnlyPoint.y)!
-        XCTAssertGreaterThan(darkDisc.redComponent, 0.85, "disc should be light on a dark bar")
-        XCTAssertEqual(darkDisc.alphaComponent, BoltDisc.discOpacity, accuracy: 0.03)
-
         let onLight = render(image, appearance: .aqua)
-        let lightDisc = onLight.colorAt(x: discOnlyPoint.x, y: discOnlyPoint.y)!
-        XCTAssertLessThan(lightDisc.redComponent, 0.15, "disc should be dark on a light bar")
-        XCTAssertEqual(lightDisc.alphaComponent, BoltDisc.discOpacity, accuracy: 0.03)
 
-        // the bolt keeps its own colour in both appearances, warmer (more green) at the top
+        // the ring uses the label colour: light on a dark bar, dark on a light bar
+        let darkRing = onDark.colorAt(x: ringPoint.x, y: ringPoint.y)!
+        XCTAssertGreaterThan(darkRing.redComponent, 0.85, "ring should be light on a dark bar")
+        XCTAssertGreaterThan(darkRing.alphaComponent, 0.8)
+        let lightRing = onLight.colorAt(x: ringPoint.x, y: ringPoint.y)!
+        XCTAssertLessThan(lightRing.redComponent, 0.15, "ring should be dark on a light bar")
+        XCTAssertGreaterThan(lightRing.alphaComponent, 0.8)
+
+        // the wave keeps its own blue in both appearances; above it, inside the ring, is empty
         for rep in [onDark, onLight] {
-            let boltTop = rep.colorAt(x: top.x, y: top.y)!
-            let boltBottom = rep.colorAt(x: bottom.x, y: bottom.y)!
-            XCTAssertGreaterThan(boltTop.redComponent, 0.95)
-            XCTAssertLessThan(boltTop.blueComponent, 0.1)
-            XCTAssertGreaterThan(boltTop.greenComponent, boltBottom.greenComponent + 0.1)
-            XCTAssertEqual(boltTop.alphaComponent, 1, accuracy: 0.02)
+            let wave = rep.colorAt(x: wavePoint.x, y: wavePoint.y)!
+            XCTAssertGreaterThan(wave.blueComponent, 0.9)
+            XCTAssertLessThan(wave.redComponent, 0.2)
+            XCTAssertEqual(wave.alphaComponent, 1, accuracy: 0.02)
+
+            let empty = rep.colorAt(x: emptyPoint.x, y: emptyPoint.y)!
+            XCTAssertLessThan(empty.alphaComponent, 0.02, "space above the wave should be transparent")
         }
     }
 
-    func test_idleBoltDisc_isADimmedDiscWithAQuietBolt() {
-        let image = MenuBarIconImage.statusItemImage(for: .boltDisc, isActive: false)
+    func test_idleWaveRing_isTheSameShapeInOneTone() {
+        let image = MenuBarIconImage.statusItemImage(for: .waveRing, isActive: false)
         let rep = render(image, appearance: .aqua)
-        let (top, _) = boltSamplePoints()
 
-        let disc = rep.colorAt(x: discOnlyPoint.x, y: discOnlyPoint.y)!
-        let bolt = rep.colorAt(x: top.x, y: top.y)!
+        let ring = rep.colorAt(x: ringPoint.x, y: ringPoint.y)!
+        let wave = rep.colorAt(x: wavePoint.x, y: wavePoint.y)!
+        let empty = rep.colorAt(x: emptyPoint.x, y: emptyPoint.y)!
 
-        XCTAssertEqual(disc.alphaComponent, BoltDisc.discOpacity, accuracy: 0.03)
-        XCTAssertEqual(bolt.alphaComponent, BoltDisc.discOpacity * BoltDisc.idleBoltKeep, accuracy: 0.03)
-        XCTAssertLessThan(bolt.alphaComponent, disc.alphaComponent, "bolt should read as a quieter cut into the disc")
-        XCTAssertLessThan(disc.redComponent, 0.05, "template image: black + alpha only")
+        XCTAssertEqual(ring.alphaComponent, WaveRing.idleOpacity, accuracy: 0.03)
+        XCTAssertEqual(wave.alphaComponent, WaveRing.idleOpacity, accuracy: 0.03)
+        XCTAssertLessThan(empty.alphaComponent, 0.02)
+        XCTAssertLessThan(ring.redComponent, 0.05, "template image: black + alpha only")
+        XCTAssertLessThan(wave.redComponent, 0.05, "template image: black + alpha only")
     }
 
     // MARK: - Helpers
 
-    /// A pixel on the disc, well clear of the bolt.
-    private var discOnlyPoint: (x: Int, y: Int) { (Int(Double(side) * 0.12), side / 2) }
+    /// A pixel on the ring, at the left edge.
+    private var ringPoint: (x: Int, y: Int) { (2, side / 2) }
 
-    /// Points inside the bolt, one in its upper bar and one in its lower tail.
-    private func boltSamplePoints() -> (top: (x: Int, y: Int), bottom: (x: Int, y: Int)) {
-        let path = BoltDisc.boltPath(in: CGRect(x: 0, y: 0, width: side, height: side))
-        let box = path.boundingBox
+    /// A pixel in the wave, below the centre.
+    private var wavePoint: (x: Int, y: Int) { (side / 2, Int(Double(side) * 0.8)) }
 
-        func interior(atFraction f: CGFloat) -> (x: Int, y: Int) {
-            let y = box.minY + box.height * f
-            let xs = stride(from: box.minX, through: box.maxX, by: 1).filter { path.contains(CGPoint(x: $0, y: y)) }
-            XCTAssertFalse(xs.isEmpty, "no bolt pixels at fraction \(f)")
-            return (Int(xs.reduce(0, +) / CGFloat(max(xs.count, 1))), Int(y))
-        }
-        return (interior(atFraction: 0.2), interior(atFraction: 0.8))
-    }
+    /// A pixel inside the ring and above the wave.
+    private var emptyPoint: (x: Int, y: Int) { (side / 2, side / 4) }
 
     /// Draws `image` into a `side`×`side` bitmap with `appearance` as the drawing appearance.
     private func render(_ image: NSImage, appearance: NSAppearance.Name) -> NSBitmapImageRep {

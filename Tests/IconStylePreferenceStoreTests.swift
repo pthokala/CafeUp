@@ -34,6 +34,13 @@ final class IconStylePreferenceStoreTests: XCTestCase {
         XCTAssertEqual(UserDefaultsIconStylePreferenceStore(defaults: defaults).load(), .flame)
     }
 
+    func test_load_withRenamedStyle_mapsToTheNewOne() {
+        // "boltDisc" shipped in 0.4.0, then became the Wave Ring.
+        defaults.set("boltDisc", forKey: "com.pardhu.CafeUp.iconStyle.v1")
+        let store = UserDefaultsIconStylePreferenceStore(defaults: defaults)
+        XCTAssertEqual(store.load(), .waveRing)
+    }
+
     func test_load_withCorruptValue_returnsDefault() {
         defaults.set("not-a-real-style", forKey: "com.pardhu.CafeUp.iconStyle.v1")
         let store = UserDefaultsIconStylePreferenceStore(defaults: defaults)

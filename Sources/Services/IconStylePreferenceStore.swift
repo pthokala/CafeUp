@@ -14,12 +14,14 @@ final class UserDefaultsIconStylePreferenceStore: IconStylePreferenceStore, @unc
         self.defaults = defaults
     }
 
+    /// Styles renamed after a release, so a choice saved under the old name survives.
+    private static let renamedStyles: [String: MenuBarIconStyle] = [
+        "boltDisc": .waveRing,
+    ]
+
     func load() -> MenuBarIconStyle {
-        guard
-            let raw = defaults.string(forKey: Self.key),
-            let style = MenuBarIconStyle(rawValue: raw)
-        else { return .default }
-        return style
+        guard let raw = defaults.string(forKey: Self.key) else { return .default }
+        return MenuBarIconStyle(rawValue: raw) ?? Self.renamedStyles[raw] ?? .default
     }
 
     func save(_ style: MenuBarIconStyle) {

@@ -18,8 +18,8 @@ struct MenuBarIcon: View {
                 SolidCircleGlyph(isFilled: isFilled)
             case .dividedDisc(let orientation):
                 DividedDiscGlyph(orientation: orientation)
-            case .boltDisc(let isActive):
-                BoltDiscGlyph(isActive: isActive)
+            case .waveRing(let isActive):
+                WaveRingGlyph(isActive: isActive)
             }
         }
         .accessibilityLabel(isActive ? "CafeUp active" : "CafeUp idle")
@@ -27,7 +27,7 @@ struct MenuBarIcon: View {
 }
 
 /// Produces the `NSImage`s for the menu-bar status item. Every style is a template
-/// image except the active Bolt Disc, whose coloured bolt needs a regular image (see
+/// image except the active Wave Ring, whose blue wave needs a regular image (see
 /// `IconRendering.isTemplate`).
 ///
 /// Why a template image (and not an `NSHostingView` subview, which was the prior
@@ -41,7 +41,7 @@ struct MenuBarIcon: View {
 /// SF Symbols go through `NSImage(systemSymbolName:)` directly so they remain
 /// vectors at high-DPI. Custom shape glyphs are rasterized with SwiftUI's
 /// `ImageRenderer` at the screen scale; the resulting bitmap is still a valid
-/// template image because every pixel is either black or transparent. The Bolt Disc
+/// template image because every pixel is either black or transparent. The Wave Ring
 /// is the exception: it is drawn with a resolution-independent drawing handler, which
 /// re-runs per appearance and screen scale, and its idle state uses partial alpha.
 @MainActor
@@ -72,10 +72,10 @@ enum MenuBarIconImage {
         case .dividedDisc(let orientation):
             return rasterize(DividedDiscGlyph(orientation: orientation))
 
-        case .boltDisc(let isActive):
+        case .waveRing(let isActive):
             return NSImage(size: NSSize(width: pointSize, height: pointSize), flipped: true) { rect in
                 guard let context = NSGraphicsContext.current?.cgContext else { return false }
-                BoltDisc.draw(isActive: isActive, in: rect, context: context)
+                WaveRing.draw(isActive: isActive, in: rect, context: context)
                 return true
             }
         }

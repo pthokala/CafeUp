@@ -68,18 +68,18 @@ final class MenuBarIconStyleTests: XCTestCase {
         )
     }
 
-    func test_boltDisc_carriesActiveStateInRendering() {
-        XCTAssertEqual(MenuBarIconStyle.boltDisc.rendering(isActive: true),  .boltDisc(isActive: true))
-        XCTAssertEqual(MenuBarIconStyle.boltDisc.rendering(isActive: false), .boltDisc(isActive: false))
+    func test_waveRing_carriesActiveStateInRendering() {
+        XCTAssertEqual(MenuBarIconStyle.waveRing.rendering(isActive: true),  .waveRing(isActive: true))
+        XCTAssertEqual(MenuBarIconStyle.waveRing.rendering(isActive: false), .waveRing(isActive: false))
     }
 
-    /// Only the active Bolt Disc has a coloured bolt, so it is the only rendering that
+    /// Only the active Wave Ring has a coloured wave, so it is the only rendering that
     /// can't be a template image. Everything else must stay one, or macOS stops
     /// tinting it for light/dark bars and the click highlight.
-    func test_onlyActiveBoltDisc_isNotATemplate() {
+    func test_onlyActiveWaveRing_isNotATemplate() {
         for style in MenuBarIconStyle.allCases {
             for isActive in [true, false] {
-                let expected = !(style == .boltDisc && isActive)
+                let expected = !(style == .waveRing && isActive)
                 XCTAssertEqual(
                     style.rendering(isActive: isActive).isTemplate, expected,
                     "\(style) isActive=\(isActive)"
