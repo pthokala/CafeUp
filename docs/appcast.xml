@@ -23,5 +23,14 @@
       <description></description>
       <enclosure url="https://github.com/pthokala/CafeUp/releases/download/v0.4.0/CafeUp-0.4.0.zip" type="application/octet-stream" sparkle:edSignature="fMeCXbQOh7Aqku1IdG0oDzupzeu0+xYauUFjVdkuZKtDTLOjAe4R9OYg7gDtnROxf7i8JAkBCWNd3OQ4zRG8Aw==" length="3427460"/>
     </item>
+    <item>
+      <title>Version 0.5.0</title>
+      <sparkle:version>5</sparkle:version>
+      <sparkle:shortVersionString>0.5.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+      <pubDate>Tue, 03 Nov 2026 16:43:53 +0000</pubDate>
+      <description></description>
+      <enclosure url="https://github.com/pthokala/CafeUp/releases/download/v0.5.0/CafeUp-0.5.0.zip" type="application/octet-stream" sparkle:edSignature="drfA5W1PPO74Lxn8dJR2uU/Q3MRhdAuvV6umvuegU7E+QDWZqelOnex8FQG1HlUI+w0ajqxov6O4CJBEkHtsCg==" length="3423075"/>
+    </item>
   </channel>
 </rss>
