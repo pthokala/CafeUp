@@ -18,13 +18,17 @@ struct MenuBarIcon: View {
                 SolidCircleGlyph(isFilled: isFilled)
             case .dividedDisc(let orientation):
                 DividedDiscGlyph(orientation: orientation)
+            case .boltDisc(let isActive):
+                BoltDiscGlyph(isActive: isActive)
             }
         }
         .accessibilityLabel(isActive ? "CafeUp active" : "CafeUp idle")
     }
 }
 
-/// Produces template `NSImage`s for the menu-bar status item.
+/// Produces the `NSImage`s for the menu-bar status item. Every style is a template
+/// image except the active Bolt Disc, whose coloured bolt needs a regular image (see
+/// `IconRendering.isTemplate`).
 ///
 /// Why a template image (and not an `NSHostingView` subview, which was the prior
 /// approach): macOS draws a selection highlight behind the status item when the
@@ -37,17 +41,20 @@ struct MenuBarIcon: View {
 /// SF Symbols go through `NSImage(systemSymbolName:)` directly so they remain
 /// vectors at high-DPI. Custom shape glyphs are rasterized with SwiftUI's
 /// `ImageRenderer` at the screen scale; the resulting bitmap is still a valid
-/// template image because every pixel is either black or transparent.
+/// template image because every pixel is either black or transparent. The Bolt Disc
+/// is the exception: it is drawn with a resolution-independent drawing handler, which
+/// re-runs per appearance and screen scale, and its idle state uses partial alpha.
 @MainActor
 enum MenuBarIconImage {
     /// Optical size of the icon inside the 22pt status-item button. Matches
     /// Apple's other menu-bar icons (battery, wifi, …).
     static let pointSize: CGFloat = 16
 
-    static func template(for style: MenuBarIconStyle, isActive: Bool) -> NSImage {
+    static func statusItemImage(for style: MenuBarIconStyle, isActive: Bool) -> NSImage {
         let label = isActive ? "CafeUp active" : "CafeUp idle"
-        let image = nsImage(for: style.rendering(isActive: isActive)) ?? fallback()
-        image.isTemplate = true
+        let rendering = style.rendering(isActive: isActive)
+        let image = nsImage(for: rendering) ?? fallback()
+        image.isTemplate = rendering.isTemplate
         image.accessibilityDescription = label
         return image
     }
@@ -64,6 +71,13 @@ enum MenuBarIconImage {
 
         case .dividedDisc(let orientation):
             return rasterize(DividedDiscGlyph(orientation: orientation))
+
+        case .boltDisc(let isActive):
+            return NSImage(size: NSSize(width: pointSize, height: pointSize), flipped: true) { rect in
+                guard let context = NSGraphicsContext.current?.cgContext else { return false }
+                BoltDisc.draw(isActive: isActive, in: rect, context: context)
+                return true
+            }
         }
     }
 
