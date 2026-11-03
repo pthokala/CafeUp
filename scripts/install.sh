@@ -312,7 +312,7 @@ acquire_from_path() {
 acquire_from_release() {
   local version="$1"
   ensure_workdir
-  info "Resolving release $version from github.com/$DEFAULT_RELEASE_OWNER/$DEFAULT_RELEASE_REPO…"
+  info "Resolving release $version from github.com/$DEFAULT_RELEASE_OWNER/${DEFAULT_RELEASE_REPO}…"
 
   local api_url
   if [ "$version" = "latest" ]; then
@@ -442,7 +442,7 @@ quit_running_app() {
   # Graceful first (osascript), then a polite pkill if the app refuses.
   pgrep -xq "$APP_NAME" 2>/dev/null || return 0
 
-  info "Quitting running $APP_NAME…"
+  info "Quitting running ${APP_NAME}…"
   if [ "$DRY_RUN" = "1" ]; then
     dim "[dry-run] osascript quit; pkill fallback if needed"
     return 0
@@ -736,7 +736,7 @@ print_summary() {
 # ============================================================================
 
 uninstall_all() {
-  info "Uninstalling $APP_NAME…"
+  info "Uninstalling ${APP_NAME}…"
 
   stop_running_session
   quit_running_app
