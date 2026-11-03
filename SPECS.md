@@ -522,39 +522,31 @@ All three tabs share the same `MenuBarViewModel` / `TriggersViewModel` / `Appear
 
 ## 12. Appearance / menu-bar icon system
 
-19 icon styles, grouped by theme. Each style has distinct `isActive: true` and `isActive: false` renderings.
+11 icon styles, grouped by theme. Each style has distinct `isActive: true` and `isActive: false` renderings.
 
 | Group | Style | Idle | Active |
 |---|---|---|---|
-| Coffee | `cupAndSaucer` *(default)* | `cup.and.saucer` | `cup.and.saucer.fill` |
-| Coffee | `cupAndSteam` | `cup.and.heat.waves` | `cup.and.heat.waves.fill` |
-| Coffee | `mug` | `mug` | `mug.fill` |
+| Coffee | `cupAndSteam` *(default)* | `cup.and.heat.waves` | `cup.and.heat.waves.fill` |
 | Coffee | `espressoDrop` | `drop` | `drop.fill` |
 | Energy | `bolt` | `bolt` | `bolt.fill` |
-| Energy | `powerToggle` | `power.circle` | `power.circle.fill` |
 | Energy | `flame` | `flame` | `flame.fill` |
 | Energy | `battery` | `battery.0percent` | `battery.100percent` |
 | Light | `ledBulb` | `lightbulb.led` | `lightbulb.led.fill` |
 | Light | `deskLamp` | `lamp.desk` | `lamp.desk.fill` |
 | Light | `sun` | `sun.max` | `sun.max.fill` |
 | Sleep | `moon` | `moon` | `moon.fill` |
-| Sleep | `owl` | `bird` | `bird.fill` |
-| Abstract | `hexagon` | `hexagon` | `hexagon.fill` |
 | Abstract | `circle` | `circle` | `circle.fill` |
-| Abstract | `pill` | `pill` | `pill.fill` |
-| Abstract | `dot` | hollow circle (custom) | filled circle (custom) |
-| Abstract | `dividedDisc` | horizontal split (custom) | vertical split (custom) |
 | Abstract | `waveRing` | white ring and wave (custom) | white ring, blue wave (custom) |
 
-Default: `cupAndSaucer`.
+Default: `cupAndSteam`.
 
-`dot` and `dividedDisc` are SwiftUI shape glyphs (`SolidCircleGlyph`, `DividedDiscGlyph`). The `MenuBarIconImage.template(for:isActive:)` helper rasterizes them to a template `NSImage` via `ImageRenderer` with `isTemplate = true`. SF-Symbol styles go through `NSImage(systemSymbolName:)` directly so they stay vector at high-DPI.
+SF-Symbol styles go through `NSImage(systemSymbolName:)` directly (via `MenuBarIconImage.statusItemImage(for:isActive:)`) so they stay vector at high-DPI, and are template images. `waveRing` is the one custom glyph.
 
 `waveRing` shares its geometry (`WaveRing`) between the picker preview (`WaveRingGlyph`) and the status item, which draws it with a resolution-independent `NSImage` drawing handler instead of `ImageRenderer`. Its idle state is a template image: a ring with a sine-wave liquid filling its lower half, drawn in one tone at 85% opacity so macOS tints it for light/dark bars and the click highlight. Its active state is the only **non-template** rendering (`IconRendering.isTemplate`): the ring is drawn in `NSColor.labelColor`, resolved at draw time so it follows light/dark, and the wave is an electric-blue (cyan to blue) gradient. Because it isn't a template, macOS does not invert it on the click highlight. Shapes are built with path booleans (`CGPath.subtracting`/`union`/`intersection`) rather than blend modes, so drawing doesn't depend on what the destination already contains.
 
 `battery` is **state-asymmetric**: idle = `battery.0percent` (empty / sleeping), active = `battery.100percent` (full / powered). All other styles use the conventional outline → `.fill` pairing.
 
-The non-coffee additions (`flame`, `owl`, `deskLamp`, `hexagon`, `moon`, `battery`) round out the "wakefulness" metaphor with Apple-shipped SF Symbols. A "Tea Kettle" was considered but SF Symbols' `kettle` requires a newer macOS than our 14.0 deployment target — skipped until we raise it.
+The non-coffee additions (`flame`, `deskLamp`, `moon`, `battery`) round out the "wakefulness" metaphor with Apple-shipped SF Symbols. A "Tea Kettle" was considered but SF Symbols' `kettle` requires a newer macOS than our 14.0 deployment target — skipped until we raise it.
 
 ---
 
@@ -673,8 +665,6 @@ Sources/
 │   ├── Appearance/
 │   │   ├── IconPickerView.swift
 │   │   ├── AppearanceViewModel.swift
-│   │   ├── DividedDiscGlyph.swift
-│   │   ├── SolidCircleGlyph.swift
 │   │   └── WaveRingGlyph.swift
 │   ├── Updates/
 │   │   └── UpdatesSectionViewModel.swift
@@ -763,6 +753,7 @@ The active-session menu UI lives inside `NSHostingView`, which doesn't expose Bu
 | Trigger JSON schema | New keys default to safe values on decode; legacy keys are honored |
 | `WakePolicy` enum → struct | `init(from decoder:)` first tries single-value String container for legacy `"systemOnly"`/`"systemAndDisplay"` |
 | Icon style enum cases added | New cases append; raw values are stable strings |
+| Icon styles removed (`cupAndSaucer`, `mug`, `powerToggle`, `owl`, `hexagon`, `pill`, `dot`, `dividedDisc`) | A saved style that no longer exists loads as the default (`cupAndSteam`) |
 | Icon style renamed (`boltDisc` → `waveRing`) | `UserDefaultsIconStylePreferenceStore` maps the old raw value to the new style, so a saved choice survives |
 
 There is no schema-version file; backward compatibility is built into each decoder.

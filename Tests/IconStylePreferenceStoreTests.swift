@@ -41,6 +41,15 @@ final class IconStylePreferenceStoreTests: XCTestCase {
         XCTAssertEqual(store.load(), .waveRing)
     }
 
+    /// Styles that were removed after release have no mapping: a saved one loads as the default.
+    func test_load_withRemovedStyle_returnsDefault() {
+        for removed in ["cupAndSaucer", "mug", "powerToggle", "owl", "hexagon", "pill", "dot", "dividedDisc"] {
+            defaults.set(removed, forKey: "com.pardhu.CafeUp.iconStyle.v1")
+            let store = UserDefaultsIconStylePreferenceStore(defaults: defaults)
+            XCTAssertEqual(store.load(), .default, "\(removed)")
+        }
+    }
+
     func test_load_withCorruptValue_returnsDefault() {
         defaults.set("not-a-real-style", forKey: "com.pardhu.CafeUp.iconStyle.v1")
         let store = UserDefaultsIconStylePreferenceStore(defaults: defaults)
