@@ -32,6 +32,20 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      # The steps below regenerate the project, so this passes in CI even when
+      # a new file was never added to the committed project.pbxproj. Check the
+      # committed copy first, before `xcodegen generate` overwrites it.
+      - name: Check committed project lists every source file
+        run: |
+          missing=0
+          while IFS= read -r file; do
+            if ! grep -qF "/* $(basename "$file") in Sources */" CafeUp.xcodeproj/project.pbxproj; then
+              echo "✗ $file is not in CafeUp.xcodeproj/project.pbxproj. Run 'xcodegen generate' and commit the result." >&2
+              missing=1
+            fi
+          done < <(git ls-files 'Sources/*.swift' 'Tests/*.swift')
+          exit "$missing"
+
       - name: Install XcodeGen
         run: brew install xcodegen
 
