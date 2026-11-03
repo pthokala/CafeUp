@@ -75,7 +75,7 @@ rm -rf "$ARCHIVE_PATH" "$EXPORT_DIR" "$ZIP_PATH"
 
 # --- Archive -----------------------------------------------------------------
 
-echo "→ Archiving CafeUp $VERSION…"
+echo "→ Archiving CafeUp ${VERSION}…"
 xcodebuild -project CafeUp.xcodeproj -scheme CafeUp -configuration Release \
   -archivePath "$ARCHIVE_PATH" archive >/dev/null
 
@@ -159,7 +159,7 @@ echo
 # --- GitHub Release ----------------------------------------------------------
 
 if [[ -f RELEASE_NOTES.md ]]; then
-  echo "→ Creating GitHub Release v$VERSION…"
+  echo "→ Creating GitHub Release v${VERSION}…"
   gh release create "v$VERSION" "$ZIP_PATH" --title "CafeUp $VERSION" --notes-file RELEASE_NOTES.md
 else
   echo "→ Skipping GitHub Release (no RELEASE_NOTES.md). Run manually:"
