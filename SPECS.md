@@ -44,7 +44,7 @@ The app is a single binary; there is no companion daemon. Everything runs in the
 
 **Bundle identifier:** `com.pardhu.CafeUp`
 **Bundle display name:** `CafeUp`
-**Version:** `0.3.0 (3)` (`MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` in `project.yml`)
+**Version:** `0.4.0 (4)` (`MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` in `project.yml`)
 
 ---
 
