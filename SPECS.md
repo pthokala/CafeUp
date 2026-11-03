@@ -531,7 +531,7 @@ All three tabs share the same `MenuBarViewModel` / `TriggersViewModel` / `Appear
 | Coffee | `mug` | `mug` | `mug.fill` |
 | Coffee | `espressoDrop` | `drop` | `drop.fill` |
 | Energy | `bolt` | `bolt` | `bolt.fill` |
-| Energy | `boltDisc` | dimmed disc, quiet bolt (custom) | label-coloured disc, warm gradient bolt (custom) |
+| Energy | `boltDisc` | bright disc, bolt cut out (custom) | label-coloured ring, warm gradient bolt (custom) |
 | Energy | `powerToggle` | `power.circle` | `power.circle.fill` |
 | Energy | `flame` | `flame` | `flame.fill` |
 | Energy | `battery` | `battery.0percent` | `battery.100percent` |
@@ -550,7 +550,7 @@ Default: `cupAndSaucer`.
 
 `dot` and `dividedDisc` are SwiftUI shape glyphs (`SolidCircleGlyph`, `DividedDiscGlyph`). The `MenuBarIconImage.template(for:isActive:)` helper rasterizes them to a template `NSImage` via `ImageRenderer` with `isTemplate = true`. SF-Symbol styles go through `NSImage(systemSymbolName:)` directly so they stay vector at high-DPI.
 
-`boltDisc` shares its geometry (`BoltDisc`) between the picker preview (`BoltDiscGlyph`) and the status item, which draws it with a resolution-independent `NSImage` drawing handler instead of `ImageRenderer`. Its idle state is a template image (a 50% disc with the bolt cut partway out). Its active state is the only **non-template** rendering (`IconRendering.isTemplate`): a disc in `NSColor.labelColor`, resolved at draw time so it follows light/dark, with a warm amber-to-orange bolt. Because it isn't a template, macOS does not invert it on the click highlight.
+`boltDisc` shares its geometry (`BoltDisc`) between the picker preview (`BoltDiscGlyph`) and the status item, which draws it with a resolution-independent `NSImage` drawing handler instead of `ImageRenderer`. Its idle state is a template image (an 85% disc with the bolt cut almost out, keeping 10% of the disc tone). Its active state is the only **non-template** rendering (`IconRendering.isTemplate`): a ring in `NSColor.labelColor` with a transparent inside, resolved at draw time so it follows light/dark, around a warm amber-to-orange bolt. The bolt is large enough to cross the ring, so the ring is cut back around it. Because it isn't a template, macOS does not invert it on the click highlight. Shapes are built with path booleans (`CGPath.subtracting`/`union`) rather than blend modes, so drawing doesn't depend on what the destination already contains.
 
 `battery` is **state-asymmetric**: idle = `battery.0percent` (empty / sleeping), active = `battery.100percent` (full / powered). All other styles use the conventional outline → `.fill` pairing.
 
