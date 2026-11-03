@@ -1,18 +1,18 @@
 import AppKit
 import SwiftUI
 
-/// Geometry and tones for the Bolt Disc icon: a circle with a flat-top lightning bolt.
+/// Geometry and tones for the Bolt Disc icon: a bright disc with a flat-top lightning bolt.
 ///
 /// The picker preview (`BoltDiscGlyph`) and the status-item image
 /// (`MenuBarIconImage`) both draw from here, so the two can't drift apart. Shapes
 /// are built with path booleans rather than blend modes, so they don't depend on
 /// what the destination already contains.
 ///
-/// - Idle: a bright disc with the bolt cut almost all the way out. Drawn as a
-///   template image, so macOS tints it for light/dark bars and the click highlight.
-/// - Active: a ring in the menu bar's label colour, transparent inside, around a warm
-///   gradient bolt. The bolt colour can't live in a template image, so this state
-///   is not one.
+/// Both states share the same disc and bolt; only the bolt differs.
+/// - Idle: the bolt is cut almost all the way out. Drawn as a template image, so
+///   macOS tints it for light/dark bars and the click highlight.
+/// - Active: the bolt is a warm gradient. That colour can't live in a template
+///   image, so this state is not one.
 enum BoltDisc {
     /// Bolt outline in unit coordinates (y up, height 1, centred on its bounding box).
     private static let outline: [CGPoint] = [
@@ -28,19 +28,12 @@ enum BoltDisc {
     /// Width of the round-join stroke that softens the bolt's corners, as a fraction of its height.
     private static let cornerSoftening: CGFloat = 0.02
 
-    /// Active: ring thickness as a fraction of the disc diameter.
-    static let ringThicknessRatio: CGFloat = 0.05
+    /// Opacity of the disc, in both states. Bright enough to read as the standard
+    /// menu-bar white. (An earlier 0.5 read as a washed-out grey.)
+    static let discOpacity: CGFloat = 0.85
 
-    /// Active: clearance carved out of the ring around the bolt, on every side, as a
-    /// fraction of the disc diameter. The bolt is big enough to cross the ring at its
-    /// corners; this makes it read as passing in front instead of colliding.
-    static let ringGapRatio: CGFloat = 0.022
-
-    /// Idle: opacity of the whole disc, and how much of the disc's tone the bolt keeps
-    /// (0 = bolt fully cut out, 1 = bolt invisible). A bright disc with the bolt cut almost
-    /// all the way out, so the bolt stays crisp at 16pt. (An earlier 0.5 / 0.55 read as a
-    /// washed-out grey disc with a bolt you couldn't make out.)
-    static let idleDiscOpacity: CGFloat = 0.85
+    /// Idle: how much of the disc's tone the bolt keeps (0 = bolt fully cut out, 1 = bolt
+    /// invisible). Nearly cut out, so the bolt stays crisp at 16pt.
     static let idleBoltKeep: CGFloat = 0.10
 
     /// Active bolt gradient, top to bottom.
@@ -61,16 +54,13 @@ enum BoltDisc {
             CGPoint(x: rect.midX + ($0.x - midX) * height, y: rect.midY - ($0.y - midY) * height)
         })
         polygon.closeSubpath()
-        return grown(polygon, by: cornerSoftening * height / 2)
-    }
 
-    /// The active ring: an annulus filling `disc`, minus clearance around the bolt.
-    static func ringPath(in disc: CGRect) -> CGPath {
-        let thickness = min(disc.width, disc.height) * ringThicknessRatio
-        let outer = CGPath(ellipseIn: disc, transform: nil)
-        let inner = CGPath(ellipseIn: disc.insetBy(dx: thickness, dy: thickness), transform: nil)
-        let clearance = grown(boltPath(in: disc), by: min(disc.width, disc.height) * ringGapRatio)
-        return outer.subtracting(inner).subtracting(clearance)
+        // Fill + round-join stroke as one path, so partial-alpha fills are applied once.
+        let rim = polygon.copy(
+            strokingWithWidth: cornerSoftening * height,
+            lineCap: .round, lineJoin: .round, miterLimit: 1
+        )
+        return polygon.union(rim, using: .winding)
     }
 
     /// The idle disc: a full circle with the bolt removed.
@@ -78,25 +68,20 @@ enum BoltDisc {
         CGPath(ellipseIn: disc, transform: nil).subtracting(boltPath(in: disc))
     }
 
-    /// `path` expanded by `distance` on every side, with round corners.
-    private static func grown(_ path: CGPath, by distance: CGFloat) -> CGPath {
-        let rim = path.copy(strokingWithWidth: distance * 2, lineCap: .round, lineJoin: .round, miterLimit: 1)
-        return path.union(rim, using: .winding)
-    }
-
     // MARK: - Drawing
 
     /// Draws the icon filling `rect` of a flipped (y-down) context. Resolves
-    /// `NSColor.labelColor` at draw time, so the ring follows the current appearance.
+    /// `NSColor.labelColor` at draw time, so the active disc follows the current appearance.
     static func draw(isActive: Bool, in rect: CGRect, context cg: CGContext) {
         let side = min(rect.width, rect.height)
         let disc = CGRect(x: rect.midX - side / 2, y: rect.midY - side / 2, width: side, height: side)
         let bolt = boltPath(in: disc)
 
         if isActive {
-            NSColor.labelColor.setFill()
-            cg.addPath(ringPath(in: disc))
-            cg.fillPath()
+            // Whole disc, then the gradient bolt over it. (Not a disc with a hole: the two
+            // edges' partial coverage would leave a faint seam of background between them.)
+            NSColor.labelColor.withAlphaComponent(discOpacity).setFill()
+            cg.fillEllipse(in: disc)
 
             let boltHeight = side * boltHeightRatio
             let gradient = CGGradient(
@@ -115,12 +100,12 @@ enum BoltDisc {
             )
             cg.restoreGState()
         } else {
-            cg.setFillColor(gray: 0, alpha: idleDiscOpacity)
+            cg.setFillColor(gray: 0, alpha: discOpacity)
             cg.addPath(idleDiscPath(in: disc))
             cg.fillPath()
 
             // What's left of the bolt: the disc's tone × idleBoltKeep.
-            cg.setFillColor(gray: 0, alpha: idleDiscOpacity * idleBoltKeep)
+            cg.setFillColor(gray: 0, alpha: discOpacity * idleBoltKeep)
             cg.addPath(bolt)
             cg.fillPath()
         }
@@ -147,8 +132,8 @@ struct BoltDiscGlyph: View {
 
             ZStack {
                 if isActive {
-                    PathShape(build: BoltDisc.ringPath(in:))
-                        .fill(Color.primary)
+                    Circle()
+                        .fill(Color.primary.opacity(BoltDisc.discOpacity))
                     PathShape(build: BoltDisc.boltPath(in:))
                         .fill(LinearGradient(
                             colors: [Color(nsColor: BoltDisc.warmTop), Color(nsColor: BoltDisc.warmBottom)],
@@ -157,9 +142,9 @@ struct BoltDiscGlyph: View {
                         ))
                 } else {
                     PathShape(build: BoltDisc.idleDiscPath(in:))
-                        .fill(Color.primary.opacity(BoltDisc.idleDiscOpacity))
+                        .fill(Color.primary.opacity(BoltDisc.discOpacity))
                     PathShape(build: BoltDisc.boltPath(in:))
-                        .fill(Color.primary.opacity(BoltDisc.idleDiscOpacity * BoltDisc.idleBoltKeep))
+                        .fill(Color.primary.opacity(BoltDisc.discOpacity * BoltDisc.idleBoltKeep))
                 }
             }
             .frame(width: side, height: side)

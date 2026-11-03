@@ -31,45 +31,21 @@ final class MenuBarIconImageTests: XCTestCase {
         XCTAssertEqual(box.height, expectedHeight, accuracy: expectedHeight * 0.04)
     }
 
-    /// The bolt is big enough to reach the ring's inner edge; the ring must give way
-    /// rather than overlap it.
-    func test_ring_neverOverlapsTheBolt() {
-        let rect = CGRect(x: 0, y: 0, width: side, height: side)
-        let bolt = BoltDisc.boltPath(in: rect)
-        let ring = BoltDisc.ringPath(in: rect)
-
-        var overlaps = 0, ringPixels = 0
-        for x in 0..<side {
-            for y in 0..<side {
-                let p = CGPoint(x: CGFloat(x) + 0.5, y: CGFloat(y) + 0.5)
-                if ring.contains(p) { ringPixels += 1 }
-                if ring.contains(p) && bolt.contains(p) { overlaps += 1 }
-            }
-        }
-        XCTAssertEqual(overlaps, 0)
-        XCTAssertGreaterThan(ringPixels, 1_000, "ring should still be there")
-    }
-
     // MARK: - Bolt Disc pixels
 
-    func test_activeBoltDisc_hasWarmGradientBoltInsideALabelColouredRing() {
+    func test_activeBoltDisc_hasWarmGradientBoltOnALabelColouredDisc() {
         let image = MenuBarIconImage.statusItemImage(for: .boltDisc, isActive: true)
         let (top, bottom) = boltSamplePoints()
 
         let onDark = render(image, appearance: .darkAqua)
-        let darkRing = onDark.colorAt(x: ringPoint.x, y: ringPoint.y)!
-        XCTAssertGreaterThan(darkRing.redComponent, 0.85, "ring should be light on a dark bar")
-        XCTAssertGreaterThan(darkRing.alphaComponent, 0.8)
+        let darkDisc = onDark.colorAt(x: discOnlyPoint.x, y: discOnlyPoint.y)!
+        XCTAssertGreaterThan(darkDisc.redComponent, 0.85, "disc should be light on a dark bar")
+        XCTAssertEqual(darkDisc.alphaComponent, BoltDisc.discOpacity, accuracy: 0.03)
 
         let onLight = render(image, appearance: .aqua)
-        let lightRing = onLight.colorAt(x: ringPoint.x, y: ringPoint.y)!
-        XCTAssertLessThan(lightRing.redComponent, 0.15, "ring should be dark on a light bar")
-
-        // the inside of the ring is transparent, not filled
-        for rep in [onDark, onLight] {
-            let inside = rep.colorAt(x: discOnlyPoint.x, y: discOnlyPoint.y)!
-            XCTAssertLessThan(inside.alphaComponent, 0.02, "inside the ring should be empty")
-        }
+        let lightDisc = onLight.colorAt(x: discOnlyPoint.x, y: discOnlyPoint.y)!
+        XCTAssertLessThan(lightDisc.redComponent, 0.15, "disc should be dark on a light bar")
+        XCTAssertEqual(lightDisc.alphaComponent, BoltDisc.discOpacity, accuracy: 0.03)
 
         // the bolt keeps its own colour in both appearances, warmer (more green) at the top
         for rep in [onDark, onLight] {
@@ -90,19 +66,16 @@ final class MenuBarIconImageTests: XCTestCase {
         let disc = rep.colorAt(x: discOnlyPoint.x, y: discOnlyPoint.y)!
         let bolt = rep.colorAt(x: top.x, y: top.y)!
 
-        XCTAssertEqual(disc.alphaComponent, BoltDisc.idleDiscOpacity, accuracy: 0.03)
-        XCTAssertEqual(bolt.alphaComponent, BoltDisc.idleDiscOpacity * BoltDisc.idleBoltKeep, accuracy: 0.03)
+        XCTAssertEqual(disc.alphaComponent, BoltDisc.discOpacity, accuracy: 0.03)
+        XCTAssertEqual(bolt.alphaComponent, BoltDisc.discOpacity * BoltDisc.idleBoltKeep, accuracy: 0.03)
         XCTAssertLessThan(bolt.alphaComponent, disc.alphaComponent, "bolt should read as a quieter cut into the disc")
         XCTAssertLessThan(disc.redComponent, 0.05, "template image: black + alpha only")
     }
 
     // MARK: - Helpers
 
-    /// A pixel inside the circle, well clear of both the bolt and the ring.
+    /// A pixel on the disc, well clear of the bolt.
     private var discOnlyPoint: (x: Int, y: Int) { (Int(Double(side) * 0.12), side / 2) }
-
-    /// A pixel on the active state's ring, at the left edge.
-    private var ringPoint: (x: Int, y: Int) { (2, side / 2) }
 
     /// Points inside the bolt, one in its upper bar and one in its lower tail.
     private func boltSamplePoints() -> (top: (x: Int, y: Int), bottom: (x: Int, y: Int)) {
