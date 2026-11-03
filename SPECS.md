@@ -88,7 +88,7 @@ A 14 × 14 template image rendered from the active `MenuBarIconStyle`. The icon 
 | 6 | `While App is Running ›` | submenu: each running regular app + Choose Application… |
 | 7 | `While File is Downloading…` (⌘F) | start indefinite session with downloads monitor |
 | 8 | *separator* | |
-| 9 | `Quick Settings ›` | submenu: Allow display sleep |
+| 9 | `Quick Settings ›` | submenu: Allow display sleep, Allow system sleep when display is closed (plus the AC-power note) |
 | 10 | `Settings…` (⌘,) | open Settings window |
 | 11 | *separator* | |
 | 12 | `About CafeUp` | `NSApp.orderFrontStandardAboutPanel(nil)` |
@@ -135,6 +135,7 @@ Both inventories are derived from `SessionPreset.minutePresets` / `.hourPresets`
 
 #### `Quick Settings ›`
 - `Allow display sleep` toggle → binds to `viewModel.policy.allowDisplaySleep`.
+- `Allow system sleep when display is closed` toggle → binds to `viewModel.policy.allowSystemSleepWhenLidClosed`. A disabled line below it repeats `WakePolicy.lidClosedAwakeNote`.
 
 #### `Feedback & Support ›`
 - `Report an Issue` → `NSWorkspace.shared.open("https://github.com/pthokala/CafeUp/issues/new")`
@@ -282,7 +283,7 @@ WakePolicy.default          = WakePolicy()
 |---|---|---|
 | **Always** (session active) | `kIOPMAssertionTypePreventUserIdleSystemSleep` | System will not sleep due to user idle |
 | `!policy.allowDisplaySleep` | `kIOPMAssertionTypePreventUserIdleDisplaySleep` | Display will not sleep due to user idle |
-| `!policy.allowSystemSleepWhenLidClosed` | `kIOPMAssertionTypePreventSystemSleep` | System will not sleep even when lid is closed (clamshell mode) |
+| `!policy.allowSystemSleepWhenLidClosed` | `kIOPMAssertionTypePreventSystemSleep` | System will not sleep even when lid is closed (clamshell mode). **macOS honors this assertion on AC power only** (see `man caffeinate`, `-s`); on battery the lid still sleeps the Mac. The UI says so next to the toggle (`WakePolicy.lidClosedAwakeNote`). |
 
 `policy.allowScreenSaverAfter45Min` does NOT map to a permanent assertion — see [§ 8](#8-idle-aware-screen-saver-release).
 
@@ -421,16 +422,20 @@ The trigger engine maintains a single `WorldState` and re-evaluates all triggers
 
 ### Strictest-policy combination
 
-When multiple triggers are satisfied, the engine acquires assertions for the *strictest* policy:
+When multiple triggers are satisfied, the engine acquires assertions for the *strictest* policy: a sleep is allowed only if every active trigger allows it.
 
 ```swift
 // From TriggerEngine.strictestPolicy
-return triggers.contains { $0.policy == .systemAndDisplay }
-    ? .systemAndDisplay
-    : .systemOnly
+triggers.reduce(WakePolicy.systemOnly) { combined, trigger in
+    WakePolicy(
+        allowDisplaySleep: combined.allowDisplaySleep && trigger.policy.allowDisplaySleep,
+        allowSystemSleepWhenLidClosed: combined.allowSystemSleepWhenLidClosed
+            && trigger.policy.allowSystemSleepWhenLidClosed
+    )
+}
 ```
 
-(This logic predates the multi-bool WakePolicy and currently only considers display sleep. Documented as a future cleanup: "strictest" should `AND` all `allow*` bools — the most-restrictive value across active triggers.)
+`allowScreenSaverAfter45Min` is not applied to trigger assertions and is always `false` in the combined policy. A trigger that keeps the Mac awake with the lid closed therefore makes the combined policy hold `PreventSystemSleep` for as long as it is active (AC power only, as above).
 
 ### Assertion failures
 
@@ -445,7 +450,8 @@ In **Settings → Triggers**:
 - List of `TriggerRow` cells: green/gray status dot, name + "N conditions · policy", enabled toggle, edit/delete buttons.
 - Editing a trigger opens a sheet with `TriggerEditorView`:
   - Name field
-  - Wake-policy picker (legacy enum: System only / System and display)
+  - Wake-policy picker (System only / System and display, bound to `policy.allowDisplaySleep`)
+  - `Keep awake with the lid closed` toggle (bound to the inverse of `policy.allowSystemSleepWhenLidClosed`), with an AC-power-only note
   - Enabled toggle
   - Conditions list with add/remove (`TriggerCondition` builder per case)
 
@@ -459,6 +465,7 @@ In **Settings → Triggers**:
 |---|---|---|---|
 | Triggers | `com.pardhu.CafeUp.triggers.v1` | JSON `[Trigger]` | `JSONEncoder` / `JSONDecoder` |
 | Icon style | `com.pardhu.CafeUp.menuBarIconStyle.v1` | String raw value | `MenuBarIconStyle.rawValue` |
+| Wake policy (saved defaults) | `com.pardhu.CafeUp.wakePolicy.v1` | JSON `WakePolicy` | `JSONEncoder` / `JSONDecoder` |
 
 Storage is `UserDefaults.standard`. There is no migration log file — backward compatibility for `WakePolicy` is handled inline in its `init(from decoder:)`.
 
@@ -573,6 +580,7 @@ CafeUp follows a strict layered architecture; dependencies point downward.
 │             UserIdleObserver · PowerObserver                │
 │             ScheduleObserver · TriggerStore · Scheduler     │
 │             Clock · Logger · IconStylePreferenceStore       │
+│             WakePolicyStore                                 │
 ├─────────────────────────────────────────────────────────────┤
 │  Domain     Session · SessionMode · WakePolicy · Trigger    │  Value types
 │             TriggerCondition · WorldState · PowerSource     │
@@ -633,6 +641,7 @@ Sources/
 │   ├── Clock.swift                     Date.now
 │   ├── Logger.swift                    os.Logger
 │   ├── IconStylePreferenceStore.swift  UserDefaults
+│   ├── WakePolicyStore.swift           UserDefaults (saved wake policy)
 │   ├── SessionAlertSounds.swift        Start/end sounds
 │   ├── StatusSnapshot.swift            status.json payload
 │   ├── StatusWriter.swift              Atomic status.json writer
@@ -693,6 +702,7 @@ Every external dependency is a `protocol` so tests can substitute fakes. Product
 | `ScheduleObserver` | `TimerScheduleObserver` | `FakeScheduleObserver` (`emit(_:)`) |
 | `TriggerStore` | `UserDefaultsTriggerStore` | `InMemoryTriggerStore` |
 | `IconStylePreferenceStore` | `UserDefaultsIconStylePreferenceStore` | `InMemoryIconStyleStore` |
+| `WakePolicyStore` | `UserDefaultsWakePolicyStore` | `InMemoryWakePolicyStore` |
 | `AppPicker` | `OpenPanelAppPicker` | `FakeAppPicker` |
 | `AppLogger` | `OSAppLogger` (`os.Logger`) | `SilentLogger` |
 
@@ -734,6 +744,7 @@ All fakes live under `Tests/Fakes/`.
 | Domain value types | `SessionTests`, `SessionPresetTests`, `WorldStateTests`, `PowerSourceTests`, `TimeOfDayTests`, `TimeRangeTests`, `WeekdayTests` | invariants, equality, edge cases |
 | Formatter | `RemainingFormatterTests` | M:SS / H:MM:SS / verbose `MMm SSs remaining` / clock time |
 | Appearance | `MenuBarIconStyleTests`, `IconStylePreferenceStoreTests`, `AppearanceViewModelTests` | rendering per active state, persistence |
+| Wake-policy persistence | `WakePolicyStoreTests`, `MenuBarViewModelTests` | UserDefaults roundtrip, corrupt data, load at init, save on change |
 
 ### Live verification
 
@@ -759,7 +770,8 @@ There is no schema-version file; backward compatibility is built into each decod
 - **Downloads monitor heuristic**: only checks partial-file extensions. A completed download with a sticky temp extension would falsely keep the session alive; an active download to a non-standard extension would not be detected.
 - **App lifetime watcher**: doesn't detect *crashes* differently from clean quits — both end the session.
 - **Idle observer poll cadence**: 30s default means a session may take up to 30 extra seconds to honor the 45-min screen-saver threshold.
-- **`TriggerEngine.strictestPolicy`**: only considers `allowDisplaySleep`. The other two `WakePolicy` bools aren't combined across triggers yet; planned future cleanup.
+- **Lid-closed awake needs AC power**: `PreventSystemSleep` is ignored by macOS on battery, so a lid close still sleeps an unplugged Mac. The app does not detect or block this; it only says so in the UI.
+- **Lid-closed default**: the default policy allows sleep on lid close (`allowSystemSleepWhenLidClosed = true`); keeping the Mac awake with the lid shut is opt-in.
 - **No multiple monitors handling**: `MenuBarIcon` template rendering uses `NSScreen.main?.backingScaleFactor`. Multi-display setups with mixed scale factors may render the custom glyphs at a non-ideal resolution.
 - **AppleScript-driven testing of in-panel toggles is not possible**: SwiftUI button labels are not exposed via AXTitle; live verification of those clicks relies on visual snapshots.
 

@@ -12,6 +12,7 @@ final class MenuBarViewModel {
     var policy: WakePolicy {
         didSet {
             guard policy != oldValue else { return }
+            policyStore?.save(policy)
             if engine.isActive {
                 perform { try engine.updatePolicy(effectivePolicy) }
             }
@@ -37,6 +38,7 @@ final class MenuBarViewModel {
     @ObservationIgnored private let appLifetimeWatcher: AppLifetimeWatcher?
     @ObservationIgnored private let downloadsMonitor: DownloadsMonitor?
     @ObservationIgnored private let idleObserver: UserIdleObserver?
+    @ObservationIgnored private let policyStore: WakePolicyStore?
     @ObservationIgnored private let idlePollInterval: Duration
     @ObservationIgnored private let tickScheduler: Scheduler
     @ObservationIgnored private let tickInterval: Duration
@@ -48,6 +50,7 @@ final class MenuBarViewModel {
         appLifetimeWatcher: AppLifetimeWatcher? = nil,
         downloadsMonitor: DownloadsMonitor? = nil,
         idleObserver: UserIdleObserver? = nil,
+        policyStore: WakePolicyStore? = nil,
         idlePollInterval: Duration = .seconds(30),
         tickScheduler: Scheduler = TaskScheduler(),
         tickInterval: Duration = .seconds(1),
@@ -58,10 +61,11 @@ final class MenuBarViewModel {
         self.appLifetimeWatcher = appLifetimeWatcher
         self.downloadsMonitor = downloadsMonitor
         self.idleObserver = idleObserver
+        self.policyStore = policyStore
         self.idlePollInterval = idlePollInterval
         self.tickScheduler = tickScheduler
         self.tickInterval = tickInterval
-        self.policy = initialPolicy
+        self.policy = policyStore?.load() ?? initialPolicy
     }
 
     var session: Session? { engine.current }

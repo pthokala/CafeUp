@@ -142,16 +142,29 @@ struct StatusBarMenuBuilder {
     }
 
     private func quickSettingsItems() -> [NSMenuItem] {
-        let item = NSMenuItem(
+        let target = QuickSettingsToggleTarget(viewModel: viewModel)
+
+        let displayItem = NSMenuItem(
             title: "Allow display sleep",
             action: #selector(QuickSettingsToggleTarget.toggleAllowDisplaySleep),
             keyEquivalent: ""
         )
-        item.state = viewModel.policy.allowDisplaySleep ? .on : .off
-        let target = QuickSettingsToggleTarget(viewModel: viewModel)
-        item.target = target
-        objc_setAssociatedObject(item, &quickToggleTargetKey, target, .OBJC_ASSOCIATION_RETAIN)
-        return [item]
+        displayItem.state = viewModel.policy.allowDisplaySleep ? .on : .off
+        displayItem.target = target
+
+        let lidItem = NSMenuItem(
+            title: "Allow system sleep when display is closed",
+            action: #selector(QuickSettingsToggleTarget.toggleAllowLidClosedSleep),
+            keyEquivalent: ""
+        )
+        lidItem.state = viewModel.policy.allowSystemSleepWhenLidClosed ? .on : .off
+        lidItem.target = target
+        lidItem.toolTip = WakePolicy.lidClosedAwakeNote
+
+        // Menu items hold their target weakly; keep it alive for as long as the items are.
+        objc_setAssociatedObject(displayItem, &quickToggleTargetKey, target, .OBJC_ASSOCIATION_RETAIN)
+        objc_setAssociatedObject(lidItem, &quickToggleTargetKey, target, .OBJC_ASSOCIATION_RETAIN)
+        return [displayItem, lidItem, disabledLine(WakePolicy.lidClosedAwakeNote)]
     }
 
     private func checkForUpdatesItem() -> NSMenuItem {
@@ -217,6 +230,9 @@ private final class QuickSettingsToggleTarget: NSObject {
     init(viewModel: MenuBarViewModel) { self.viewModel = viewModel }
     @objc func toggleAllowDisplaySleep() {
         viewModel.policy.allowDisplaySleep.toggle()
+    }
+    @objc func toggleAllowLidClosedSleep() {
+        viewModel.policy.allowSystemSleepWhenLidClosed.toggle()
     }
 }
 

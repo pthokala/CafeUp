@@ -134,6 +134,77 @@ final class TriggerEngineTests: XCTestCase {
         XCTAssertEqual(sut.assertions.lastPolicy, .systemAndDisplay)
     }
 
+    func test_triggerWithLidClosedAwake_acquiresSystemSleepAssertion() {
+        let keepAwakeLidClosed = WakePolicy(allowDisplaySleep: true, allowSystemSleepWhenLidClosed: false)
+        let trigger = Trigger(name: "Lid", conditions: [.appRunning(bundleIdentifier: "a")], policy: keepAwakeLidClosed)
+        let sut = makeSUT(initial: [trigger])
+
+        sut.engine.start()
+        sut.appObserver.emit(["a"])
+
+        XCTAssertEqual(sut.assertions.lastPolicy, keepAwakeLidClosed)
+    }
+
+    func test_lidClosedAwake_winsOverLidSleepAllowed_whenMultipleActive() {
+        let triggers = [
+            Trigger(name: "A", conditions: [.appRunning(bundleIdentifier: "a")], policy: .systemOnly),
+            Trigger(
+                name: "B",
+                conditions: [.appRunning(bundleIdentifier: "b")],
+                policy: WakePolicy(allowDisplaySleep: true, allowSystemSleepWhenLidClosed: false)
+            )
+        ]
+        let sut = makeSUT(initial: triggers)
+
+        sut.engine.start()
+        sut.appObserver.emit(["a", "b"])
+
+        XCTAssertEqual(sut.assertions.lastPolicy?.allowSystemSleepWhenLidClosed, false)
+        XCTAssertEqual(sut.assertions.lastPolicy?.allowDisplaySleep, true)
+    }
+
+    func test_combinedPolicy_holdsDisplayAndLid_acrossDifferentTriggers() {
+        let triggers = [
+            Trigger(
+                name: "Display",
+                conditions: [.appRunning(bundleIdentifier: "a")],
+                policy: WakePolicy(allowDisplaySleep: false, allowSystemSleepWhenLidClosed: true)
+            ),
+            Trigger(
+                name: "Lid",
+                conditions: [.appRunning(bundleIdentifier: "b")],
+                policy: WakePolicy(allowDisplaySleep: true, allowSystemSleepWhenLidClosed: false)
+            )
+        ]
+        let sut = makeSUT(initial: triggers)
+
+        sut.engine.start()
+        sut.appObserver.emit(["a", "b"])
+
+        XCTAssertEqual(
+            sut.assertions.lastPolicy,
+            WakePolicy(allowDisplaySleep: false, allowSystemSleepWhenLidClosed: false)
+        )
+    }
+
+    func test_lidClosedTriggerDeactivating_dropsLidAssertion() {
+        let triggers = [
+            Trigger(name: "A", conditions: [.appRunning(bundleIdentifier: "a")], policy: .systemOnly),
+            Trigger(
+                name: "B",
+                conditions: [.appRunning(bundleIdentifier: "b")],
+                policy: WakePolicy(allowDisplaySleep: true, allowSystemSleepWhenLidClosed: false)
+            )
+        ]
+        let sut = makeSUT(initial: triggers)
+        sut.engine.start()
+        sut.appObserver.emit(["a", "b"])
+
+        sut.appObserver.emit(["a"])
+
+        XCTAssertEqual(sut.assertions.lastPolicy, .systemOnly)
+    }
+
     func test_acquireFailure_doesNotReportTriggerActive() {
         let trigger = Trigger(name: "AC", conditions: [.onACPower])
         let sut = makeSUT(initial: [trigger], initialPower: PowerSource(isOnACPower: true, batteryPercentage: 100))

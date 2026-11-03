@@ -1,0 +1,69 @@
+# Unit tests for CafeUp.
+#
+# Runs the XCTest suite on every pull request and on pushes to `main`, so a
+# broken build or failing test shows up on the PR instead of at release time.
+# The release workflow (release.yml) only runs on version tags.
+
+name: Test
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A newer push to the same branch or PR makes the older run redundant.
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    # Same runner as release.yml: macos-15's Xcode 16 can read the pbxproj
+    # objectVersion that xcodegen produces; macos-14's Xcode 15.4 cannot.
+    runs-on: macos-15
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      # The steps below regenerate the project, so this passes in CI even when
+      # a new file was never added to the committed project.pbxproj. Check the
+      # committed copy first, before `xcodegen generate` overwrites it.
+      - name: Check committed project lists every source file
+        run: |
+          missing=0
+          while IFS= read -r file; do
+            if ! grep -qF "/* $(basename "$file") in Sources */" CafeUp.xcodeproj/project.pbxproj; then
+              echo "✗ $file is not in CafeUp.xcodeproj/project.pbxproj. Run 'xcodegen generate' and commit the result." >&2
+              missing=1
+            fi
+          done < <(git ls-files 'Sources/*.swift' 'Tests/*.swift')
+          exit "$missing"
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Run unit tests
+        run: |
+          xcodebuild test \
+            -project CafeUp.xcodeproj \
+            -scheme CafeUp \
+            -destination 'platform=macOS' \
+            -resultBundlePath "$RUNNER_TEMP/TestResults.xcresult"
+
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TestResults
+          path: ${{ runner.temp }}/TestResults.xcresult
+          if-no-files-found: ignore

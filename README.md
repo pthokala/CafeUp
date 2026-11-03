@@ -17,8 +17,10 @@ A native macOS menu-bar app that keeps your Mac awake. One click in the menu bar
 
 ### Wake-behavior toggles (per active session)
 - **Allow display sleep** — releases the display assertion so the screen can go dark.
-- **Allow system sleep when display is closed** — releases the clamshell assertion, letting the Mac sleep when the lid is closed.
+- **Allow system sleep when display is closed** — on by default. Uncheck it to hold the clamshell assertion and keep the Mac awake with the lid shut. macOS honors this on AC power only; on battery the lid still sleeps the Mac.
 - **Allow screen saver after 45m of inactivity** — releases the display assertion automatically once the user has been idle ≥ 45 minutes, then reacquires it when the user returns.
+
+Your toggle choices are remembered across launches.
 
 ### Triggers (automatic activation)
 Define rules in **Settings → Triggers** that activate sessions automatically:
@@ -27,7 +29,7 @@ Define rules in **Settings → Triggers** that activate sessions automatically:
 - **On AC power** — keeps awake only when plugged in.
 - **Battery ≥ N%** — keeps awake only when battery is above threshold.
 
-Triggers combine with AND semantics; multiple active triggers use the strictest wake policy.
+Triggers combine with AND semantics. Each trigger picks its own wake policy (system only or system and display, optionally keeping the Mac awake with the lid closed — AC power only). When several triggers are active, the strictest value of each option wins.
 
 ### Shortcuts & Siri
 Two built-in App Intents, usable from the Shortcuts app, Spotlight, or Siri:
@@ -264,7 +266,7 @@ Sources/
   Services/       PowerAssertionService, AppActivityObserver,
                   AppLifetimeWatcher, DownloadsMonitor, UserIdleObserver,
                   ScheduleObserver, PowerObserver, TriggerStore,
-                  Scheduler, Clock, Logger, IconStylePreferenceStore
+                  Scheduler, Clock, Logger, IconStylePreferenceStore, WakePolicyStore
   Features/
     MenuBar/      StatusBarController, MenuBarView, ActiveSessionPanel,
                   CustomDurationView, EndAtTimeView, MenuBarIcon,

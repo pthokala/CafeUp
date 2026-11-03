@@ -47,6 +47,10 @@ struct WakePolicy: Sendable, Hashable, Codable {
     /// Default: keep display on, allow lid-close sleep.
     static let `default` = WakePolicy()
 
+    /// Shown beside the lid-closed option: `PreventSystemSleep` is honored by macOS on AC
+    /// power only, so unchecking it does not keep a Mac on battery awake with the lid shut.
+    static let lidClosedAwakeNote = "Uncheck to stay awake lid-closed (AC power only)."
+
     /// Equivalent of the legacy `.systemOnly` enum case — system stays awake but display
     /// may sleep.
     static let systemOnly = WakePolicy(

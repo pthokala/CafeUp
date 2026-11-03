@@ -73,6 +73,45 @@ final class MenuBarViewModelTests: XCTestCase {
         XCTAssertEqual(sut.sessionAssertions.acquireCount, countBefore)
     }
 
+    func test_policy_loadsFromStoreAtInit() {
+        let stored = WakePolicy(allowSystemSleepWhenLidClosed: false)
+        let store = InMemoryWakePolicyStore(initial: stored)
+
+        let sut = makeSUT(initialPolicy: .systemOnly, policyStore: store)
+
+        XCTAssertEqual(sut.viewModel.policy, stored)
+    }
+
+    func test_policyChange_isSavedToStore() {
+        let store = InMemoryWakePolicyStore()
+        let sut = makeSUT(policyStore: store)
+
+        sut.viewModel.policy.allowSystemSleepWhenLidClosed = false
+
+        XCTAssertEqual(store.load().allowSystemSleepWhenLidClosed, false)
+        XCTAssertEqual(store.saveCount, 1)
+    }
+
+    func test_policyChange_toSameValue_doesNotSave() {
+        let store = InMemoryWakePolicyStore(initial: .systemOnly)
+        let sut = makeSUT(policyStore: store)
+
+        sut.viewModel.policy = .systemOnly
+
+        XCTAssertEqual(store.saveCount, 0)
+    }
+
+    func test_policyChange_whileActive_isSavedToStore() {
+        let store = InMemoryWakePolicyStore()
+        let sut = makeSUT(policyStore: store)
+        sut.viewModel.startIndefinite()
+
+        sut.viewModel.policy.allowSystemSleepWhenLidClosed = false
+
+        XCTAssertEqual(store.load().allowSystemSleepWhenLidClosed, false)
+        XCTAssertEqual(sut.sessionAssertions.lastPolicy?.allowSystemSleepWhenLidClosed, false)
+    }
+
     func test_startFailure_capturesError() {
         let sut = makeSUT()
         sut.sessionAssertions.failure = .assertionFailed(code: -99)
@@ -146,7 +185,8 @@ final class MenuBarViewModelTests: XCTestCase {
 
     private func makeSUT(
         initialPolicy: WakePolicy = .systemAndDisplay,
-        persistedTriggers: [Trigger] = []
+        persistedTriggers: [Trigger] = [],
+        policyStore: WakePolicyStore? = nil
     ) -> SUT {
         let sessionAssertions = FakePowerAssertionService()
         let triggerAssertions = FakePowerAssertionService()
@@ -169,6 +209,7 @@ final class MenuBarViewModelTests: XCTestCase {
         let viewModel = MenuBarViewModel(
             engine: sessionEngine,
             triggerEngine: triggerEngine,
+            policyStore: policyStore,
             initialPolicy: initialPolicy
         )
         return SUT(

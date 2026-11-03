@@ -35,6 +35,9 @@ private struct GeneralSettingsView: View {
                     get: { menuBarViewModel.policy.allowSystemSleepWhenLidClosed },
                     set: { menuBarViewModel.policy.allowSystemSleepWhenLidClosed = $0 }
                 ))
+                Text(WakePolicy.lidClosedAwakeNote)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 LightCheckbox(title: "Allow screen saver after 45m of inactivity", isOn: Binding(
                     get: { menuBarViewModel.policy.allowScreenSaverAfter45Min },
                     set: { menuBarViewModel.policy.allowScreenSaverAfter45Min = $0 }
