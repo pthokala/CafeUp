@@ -54,6 +54,42 @@ final class SessionEngineTests: XCTestCase {
         XCTAssertEqual(engine.current?.endsAt, originalEnd)
     }
 
+    func test_extend_pushesEndAndReschedulesAutoStop() throws {
+        let (engine, fakes) = makeSUT()
+
+        try engine.start(mode: .timed(.seconds(60)), policy: .systemOnly)
+        let original = try XCTUnwrap(engine.current)
+        let firstHandle = fakes.scheduler.pending.first?.handle
+        engine.extend(by: .seconds(15 * 60))
+
+        XCTAssertEqual(engine.current?.endsAt, original.endsAt?.addingTimeInterval(15 * 60))
+        XCTAssertEqual(engine.current?.startedAt, original.startedAt)
+        XCTAssertEqual(engine.current?.id, original.id)
+        XCTAssertEqual(engine.current?.mode, .timed(.seconds(16 * 60)))
+        XCTAssertEqual(firstHandle?.cancelled, true)
+        XCTAssertEqual(fakes.scheduler.pending.last?.duration, .seconds(16 * 60))
+        XCTAssertEqual(fakes.assertions.acquireCount, 1, "Extending must not re-acquire the assertion")
+    }
+
+    func test_extend_indefiniteSession_isNoOp() throws {
+        let (engine, fakes) = makeSUT()
+
+        try engine.start(mode: .indefinite, policy: .systemOnly)
+        engine.extend(by: .seconds(60))
+
+        XCTAssertNil(engine.current?.endsAt)
+        XCTAssertEqual(engine.current?.mode, .indefinite)
+        XCTAssertTrue(fakes.scheduler.pending.isEmpty)
+    }
+
+    func test_extend_withoutSession_isNoOp() {
+        let (engine, _) = makeSUT()
+
+        engine.extend(by: .seconds(60))
+
+        XCTAssertNil(engine.current)
+    }
+
     func test_updatePolicy_withoutSession_isNoOp() throws {
         let (engine, fakes) = makeSUT()
 

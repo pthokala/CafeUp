@@ -7,8 +7,6 @@ struct StatusBarMenuBuilder {
     let updaterService: UpdaterService
     let pickApplication: () -> PickedApplication?
     let openSettings: () -> Void
-    let openCustomDuration: () -> Void
-    let openEndAtTime: () -> Void
     let dismissMenu: () -> Void
 
     func buildMenu() -> NSMenu {
@@ -17,23 +15,30 @@ struct StatusBarMenuBuilder {
 
         if viewModel.isManualSessionActive {
             menu.addItem(activeSessionItem())
-            // No native separator — the panel's bottom hairline serves as the boundary.
+            menu.addItem(.separator())
         } else if viewModel.isTriggerActive {
             for item in triggerOnlyItems() { menu.addItem(item) }
             menu.addItem(.separator())
         }
 
         menu.addItem(sectionHeader("Start New Session:"))
-        menu.addItem(ClosureMenuItem(title: "Indefinitely", keyEquivalent: "i") { [viewModel] in
-            viewModel.startIndefinite()
-        })
-        menu.addItem(submenu(title: "Minutes", buildItems: minutePresetItems))
-        menu.addItem(submenu(title: "Hours", buildItems: hourPresetItems))
-        menu.addItem(submenu(title: "Other Time/Until", buildItems: otherTimeItems))
-        menu.addItem(submenu(title: "While App is Running", buildItems: appRunningItems))
-        menu.addItem(ClosureMenuItem(title: "While File is Downloading…", keyEquivalent: "f") { [viewModel] in
-            viewModel.startWhileDownloading()
-        })
+        let sessionItems: [NSMenuItem] = [
+            ClosureMenuItem(title: "Indefinitely", keyEquivalent: "i") { [viewModel] in
+                viewModel.startIndefinite()
+            },
+            submenu(title: "Minutes", buildItems: minutePresetItems),
+            submenu(title: "Hours", buildItems: hourPresetItems),
+            submenu(title: "Other Time/Until", buildItems: otherTimeItems),
+            submenu(title: "While App is Running", buildItems: appRunningItems),
+            ClosureMenuItem(title: "While File is Downloading…", keyEquivalent: "f") { [viewModel] in
+                viewModel.startWhileDownloading()
+            },
+        ]
+        // Indented under the header, like the detail rows in the active-session panel.
+        for item in sessionItems {
+            item.indentationLevel = 1
+            menu.addItem(item)
+        }
 
         menu.addItem(.separator())
 
@@ -61,17 +66,12 @@ struct StatusBarMenuBuilder {
     // MARK: - Active session (custom NSHostingView)
 
     private func activeSessionItem() -> NSMenuItem {
-        let item = NSMenuItem()
-        let panel = ActiveSessionPanel(viewModel: viewModel, onEnd: { [viewModel, dismissMenu] in
+        // ⌘X is handled by StatusBarController: NSMenu ignores key equivalents on
+        // view-backed items. The panel only draws the hint.
+        hostedMenuItem(ActiveSessionPanel(viewModel: viewModel, onEnd: { [viewModel, dismissMenu] in
             viewModel.stop()
             dismissMenu()
-        })
-        let host = NSHostingView(rootView: panel)
-        host.translatesAutoresizingMaskIntoConstraints = true
-        let size = host.fittingSize
-        host.frame = NSRect(origin: .zero, size: size)
-        item.view = host
-        return item
+        }))
     }
 
     private func triggerOnlyItems() -> [NSMenuItem] {
@@ -98,47 +98,57 @@ struct StatusBarMenuBuilder {
     }
 
     private func minutePresetItems() -> [NSMenuItem] {
-        SessionPreset.minutePresets.map { preset in
-            ClosureMenuItem(title: preset.label) { [viewModel] in
-                viewModel.start(duration: preset.duration)
-            }
-        }
+        presetItems(SessionPreset.minutePresetGroups)
     }
 
     private func hourPresetItems() -> [NSMenuItem] {
-        SessionPreset.hourPresets.map { preset in
-            ClosureMenuItem(title: preset.label) { [viewModel] in
-                viewModel.start(duration: preset.duration)
-            }
-        }
+        presetItems(SessionPreset.hourPresetGroups)
     }
 
-    private func otherTimeItems() -> [NSMenuItem] {
-        [
-            ClosureMenuItem(title: "Custom Duration…", handler: openCustomDuration),
-            ClosureMenuItem(title: "End at Time…", handler: openEndAtTime),
-        ]
-    }
-
-    private func appRunningItems() -> [NSMenuItem] {
-        let apps = RunningApplicationsSnapshot.currentRegularApps()
+    /// One item per preset, with a separator between groups.
+    private func presetItems(_ groups: [[SessionPreset]]) -> [NSMenuItem] {
         var items: [NSMenuItem] = []
-        if apps.isEmpty {
-            items.append(disabledLine("No other apps running"))
-        } else {
-            for entry in apps.prefix(15) {
-                items.append(ClosureMenuItem(title: entry.name) { [viewModel] in
-                    viewModel.startWhileAppRunning(bundleIdentifier: entry.id)
+        for (index, group) in groups.enumerated() {
+            if index > 0 { items.append(.separator()) }
+            for preset in group {
+                items.append(ClosureMenuItem(title: preset.label) { [viewModel] in
+                    viewModel.start(duration: preset.duration)
                 })
             }
         }
-        items.append(.separator())
-        items.append(ClosureMenuItem(title: "Choose Application…") { [viewModel, pickApplication] in
-            if let picked = pickApplication() {
-                viewModel.startWhileAppRunning(bundleIdentifier: picked.bundleIdentifier)
-            }
-        })
         return items
+    }
+
+    private func otherTimeItems() -> [NSMenuItem] {
+        [hostedMenuItem(OtherTimePanel(
+            onStartFor: { [viewModel, dismissMenu] duration in
+                viewModel.start(duration: duration)
+                dismissMenu()
+            },
+            onStartUntil: { [viewModel, dismissMenu] end in
+                viewModel.startUntil(end)
+                dismissMenu()
+            }
+        ))]
+    }
+
+    private func appRunningItems() -> [NSMenuItem] {
+        [hostedMenuItem(AppPickerPanel(
+            onSelect: { [viewModel, dismissMenu] bundleIdentifier in
+                viewModel.startWhileAppRunning(bundleIdentifier: bundleIdentifier)
+                dismissMenu()
+            },
+            onChooseOther: { [viewModel, pickApplication, dismissMenu] in
+                dismissMenu()
+                // Run the open panel once the menu has finished closing.
+                DispatchQueue.main.async {
+                    if let picked = pickApplication() {
+                        viewModel.startWhileAppRunning(bundleIdentifier: picked.bundleIdentifier)
+                    }
+                }
+            },
+            onCancel: dismissMenu
+        ))]
     }
 
     private func quickSettingsItems() -> [NSMenuItem] {
@@ -192,20 +202,20 @@ struct StatusBarMenuBuilder {
 
     // MARK: - Helpers
 
-    /// Custom bold section header so it matches the weight of "Current Session Details:"
-    /// in the active-session panel, instead of NSMenu's default thin secondary-gray.
+    /// Custom medium-weight section header so it matches the weight of "Current Session Details:"
+    /// in the active-session panel, instead of NSMenu's default small secondary-gray.
     private func sectionHeader(_ title: String) -> NSMenuItem {
         let item = NSMenuItem()
         let label = HStack {
             Text(title)
-                .font(.system(size: 13, weight: .bold))
+                .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(.primary)
             Spacer(minLength: 0)
         }
         .padding(.horizontal, 16)   // matches NSMenu item inset & ActiveSessionPanel inset
-        .padding(.top, 8)
-        .padding(.bottom, 4)
-        .frame(width: 330, alignment: .leading)
+        .padding(.top, 3)
+        .padding(.bottom, 2)
+        .frame(width: ActiveSessionPanel.width, alignment: .leading)
 
         let host = NSHostingView(rootView: label)
         host.translatesAutoresizingMaskIntoConstraints = true

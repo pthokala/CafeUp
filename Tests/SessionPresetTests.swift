@@ -3,34 +3,26 @@ import XCTest
 
 final class SessionPresetTests: XCTestCase {
 
-    func test_minutePresets_haveExpectedDurations() {
+    func test_minutePresets_areEveryFiveMinutesUpTo55() {
         XCTAssertEqual(
             SessionPreset.minutePresets.map(\.duration),
-            [
-                .seconds(5 * 60),
-                .seconds(10 * 60),
-                .seconds(15 * 60),
-                .seconds(20 * 60),
-                .seconds(30 * 60),
-                .seconds(45 * 60)
-            ]
+            stride(from: 5, through: 55, by: 5).map { .seconds($0 * 60) }
         )
+    }
+
+    func test_minutePresetGroups_pairUpAfterTheFirst() {
+        XCTAssertEqual(SessionPreset.minutePresetGroups.map(\.count), [1, 2, 2, 2, 2, 2])
     }
 
     func test_hourPresets_haveExpectedDurations() {
         XCTAssertEqual(
             SessionPreset.hourPresets.map(\.duration),
-            [
-                .seconds(60 * 60),
-                .seconds(2 * 60 * 60),
-                .seconds(3 * 60 * 60),
-                .seconds(4 * 60 * 60),
-                .seconds(5 * 60 * 60),
-                .seconds(6 * 60 * 60),
-                .seconds(8 * 60 * 60),
-                .seconds(12 * 60 * 60)
-            ]
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 24].map { .seconds($0 * 60 * 60) }
         )
+    }
+
+    func test_hourPresetGroups_splitAfterNineHours() {
+        XCTAssertEqual(SessionPreset.hourPresetGroups.map(\.count), [9, 3])
     }
 
     func test_minutePresets_labelsAreUnique() {
@@ -50,12 +42,12 @@ final class SessionPresetTests: XCTestCase {
 
     func test_minutePresets_labelsHaveCorrectGrammar() {
         for preset in SessionPreset.minutePresets {
-            XCTAssertTrue(preset.label.hasSuffix("Minutes"), "Expected plural \"Minutes\" suffix for \(preset.label)")
+            XCTAssertTrue(preset.label.hasSuffix(" minutes"), "Expected plural \"minutes\" suffix for \(preset.label)")
         }
     }
 
     func test_hourPresets_labelsHaveCorrectGrammar() {
-        XCTAssertEqual(SessionPreset.hourPresets.first?.label, "1 Hour")
-        XCTAssertEqual(SessionPreset.hourPresets.dropFirst().first?.label, "2 Hours")
+        XCTAssertEqual(SessionPreset.hourPresets.first?.label, "1 hour")
+        XCTAssertEqual(SessionPreset.hourPresets.dropFirst().first?.label, "2 hours")
     }
 }

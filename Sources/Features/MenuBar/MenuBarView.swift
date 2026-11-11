@@ -103,7 +103,7 @@ struct MenuBarView: View {
             }
 
             Menu("While App is Running") {
-                let apps = RunningApplicationsSnapshot.currentRegularApps()
+                let apps = RunningApplicationsSnapshot.runningApps()
                 if apps.isEmpty {
                     Text("No other apps running")
                 } else {
