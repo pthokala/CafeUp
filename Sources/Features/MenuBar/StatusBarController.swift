@@ -12,25 +12,19 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     private let updaterService: UpdaterService
     private let pickApplication: () -> PickedApplication?
     private let openSettings: () -> Void
-    private let openCustomDuration: () -> Void
-    private let openEndAtTime: () -> Void
 
     init(
         viewModel: MenuBarViewModel,
         appearanceViewModel: AppearanceViewModel,
         updaterService: UpdaterService,
         pickApplication: @escaping () -> PickedApplication?,
-        openSettings: @escaping () -> Void,
-        openCustomDuration: @escaping () -> Void,
-        openEndAtTime: @escaping () -> Void
+        openSettings: @escaping () -> Void
     ) {
         self.viewModel = viewModel
         self.appearanceViewModel = appearanceViewModel
         self.updaterService = updaterService
         self.pickApplication = pickApplication
         self.openSettings = openSettings
-        self.openCustomDuration = openCustomDuration
-        self.openEndAtTime = openEndAtTime
 
         self.statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         super.init()
@@ -99,8 +93,6 @@ final class StatusBarController: NSObject, NSMenuDelegate {
                 updaterService: updaterService,
                 pickApplication: pickApplication,
                 openSettings: openSettings,
-                openCustomDuration: openCustomDuration,
-                openEndAtTime: openEndAtTime,
                 dismissMenu: { [weak self] in
                     self?.statusItem.menu?.cancelTracking()
                 }
@@ -110,6 +102,35 @@ final class StatusBarController: NSObject, NSMenuDelegate {
                 fresh.removeItem(item)
                 menu.addItem(item)
             }
+        }
+    }
+
+    // MARK: - ⌘X (End Current Session)
+
+    /// The active-session panel is a view-backed menu item, and NSMenu doesn't match
+    /// key equivalents on those — so ⌘X is caught here while the menu is open.
+    private var endShortcutMonitor: Any?
+
+    nonisolated func menuWillOpen(_ menu: NSMenu) {
+        MainActor.assumeIsolated {
+            endShortcutMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+                // Ends the session even when the Extend box has focus (it takes focus as
+                // soon as the menu opens), matching the ⌘X hint next to the End button.
+                guard let self,
+                      event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
+                      event.charactersIgnoringModifiers == "x",
+                      viewModel.isManualSessionActive else { return event }
+                viewModel.stop()
+                statusItem.menu?.cancelTracking()
+                return nil
+            }
+        }
+    }
+
+    nonisolated func menuDidClose(_ menu: NSMenu) {
+        MainActor.assumeIsolated {
+            if let endShortcutMonitor { NSEvent.removeMonitor(endShortcutMonitor) }
+            endShortcutMonitor = nil
         }
     }
 }

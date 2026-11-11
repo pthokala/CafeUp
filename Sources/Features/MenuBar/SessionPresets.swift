@@ -5,23 +5,30 @@ struct SessionPreset: Identifiable, Hashable {
     let label: String
     let duration: Duration
 
-    static let minutePresets: [SessionPreset] = [
-        SessionPreset(label: "5 Minutes",  duration: .seconds(5 * 60)),
-        SessionPreset(label: "10 Minutes", duration: .seconds(10 * 60)),
-        SessionPreset(label: "15 Minutes", duration: .seconds(15 * 60)),
-        SessionPreset(label: "20 Minutes", duration: .seconds(20 * 60)),
-        SessionPreset(label: "30 Minutes", duration: .seconds(30 * 60)),
-        SessionPreset(label: "45 Minutes", duration: .seconds(45 * 60))
+    /// Minutes submenu, one inner array per block between separators.
+    static let minutePresetGroups: [[SessionPreset]] = [
+        [minutes(5)],
+        [minutes(10), minutes(15)],
+        [minutes(20), minutes(25)],
+        [minutes(30), minutes(35)],
+        [minutes(40), minutes(45)],
+        [minutes(50), minutes(55)],
     ]
 
-    static let hourPresets: [SessionPreset] = [
-        SessionPreset(label: "1 Hour",   duration: .seconds(60 * 60)),
-        SessionPreset(label: "2 Hours",  duration: .seconds(2 * 60 * 60)),
-        SessionPreset(label: "3 Hours",  duration: .seconds(3 * 60 * 60)),
-        SessionPreset(label: "4 Hours",  duration: .seconds(4 * 60 * 60)),
-        SessionPreset(label: "5 Hours",  duration: .seconds(5 * 60 * 60)),
-        SessionPreset(label: "6 Hours",  duration: .seconds(6 * 60 * 60)),
-        SessionPreset(label: "8 Hours",  duration: .seconds(8 * 60 * 60)),
-        SessionPreset(label: "12 Hours", duration: .seconds(12 * 60 * 60))
+    /// Hours submenu, one inner array per block between separators.
+    static let hourPresetGroups: [[SessionPreset]] = [
+        (1...9).map(hours),
+        [hours(10), hours(12), hours(24)],
     ]
+
+    static let minutePresets: [SessionPreset] = minutePresetGroups.flatMap { $0 }
+    static let hourPresets: [SessionPreset] = hourPresetGroups.flatMap { $0 }
+
+    private static func minutes(_ n: Int) -> SessionPreset {
+        SessionPreset(label: "\(n) minutes", duration: .seconds(n * 60))
+    }
+
+    private static func hours(_ n: Int) -> SessionPreset {
+        SessionPreset(label: n == 1 ? "1 hour" : "\(n) hours", duration: .seconds(n * 60 * 60))
+    }
 }

@@ -29,9 +29,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             appearanceViewModel: deps.appearanceViewModel,
             updaterService: deps.updaterService,
             pickApplication: { [deps] in deps.appPicker.pickApplication() },
-            openSettings: { [weak self] in self?.showSettings() },
-            openCustomDuration: { [weak self] in self?.showCustomDuration() },
-            openEndAtTime: { [weak self] in self?.showEndAtTime() }
+            openSettings: { [weak self] in self?.showSettings() }
         )
         let router = URLCommandRouter(
             handler: AppIntentBridge.shared,
@@ -79,20 +77,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 triggersViewModel: deps.triggersViewModel,
                 updatesViewModel: deps.updatesViewModel
             )
-        }
-    }
-
-    private func showCustomDuration() {
-        let viewModel = deps.menuBarViewModel
-        windows.show(id: WindowID.customDuration, title: "Custom Duration") { close in
-            CustomDurationView(onStart: { viewModel.start(duration: $0) }, onClose: close)
-        }
-    }
-
-    private func showEndAtTime() {
-        let viewModel = deps.menuBarViewModel
-        windows.show(id: WindowID.endAtTime, title: "End at Time") { close in
-            EndAtTimeView(onStart: { viewModel.startUntil($0) }, onClose: close)
         }
     }
 }

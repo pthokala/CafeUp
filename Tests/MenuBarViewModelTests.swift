@@ -34,6 +34,24 @@ final class MenuBarViewModelTests: XCTestCase {
         XCTAssertNotNil(sut.viewModel.session?.endsAt)
     }
 
+    func test_extendSession_pushesEndOfTimedSession() throws {
+        let sut = makeSUT()
+        sut.viewModel.start(duration: .seconds(60))
+        let originalEnd = try XCTUnwrap(sut.viewModel.session?.endsAt)
+
+        sut.viewModel.extendSession(by: .seconds(15 * 60))
+
+        XCTAssertTrue(sut.viewModel.isTimedSession)
+        XCTAssertEqual(sut.viewModel.session?.endsAt, originalEnd.addingTimeInterval(15 * 60))
+    }
+
+    func test_isTimedSession_falseForIndefinite() {
+        let sut = makeSUT()
+        sut.viewModel.startIndefinite()
+
+        XCTAssertFalse(sut.viewModel.isTimedSession)
+    }
+
     func test_stop_clearsSession() {
         let sut = makeSUT()
         sut.viewModel.startIndefinite()

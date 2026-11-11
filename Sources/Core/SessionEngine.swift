@@ -51,6 +51,29 @@ final class SessionEngine {
         try replaceSession(mode: session.mode, policy: policy, preserving: session)
     }
 
+    /// Pushes a timed session's end out by `duration`, keeping its assertion and start
+    /// time. No-op without a session or for one with no end (indefinite, app, download).
+    func extend(by duration: Duration) {
+        guard let session = current, let endsAt = session.endsAt else { return }
+        let newEnd = endsAt.addingTimeInterval(TimeInterval(duration.components.seconds))
+
+        scheduled?.cancel()
+        scheduled = nil
+        current = Session(
+            id: session.id,
+            mode: .timed(.seconds(newEnd.timeIntervalSince(session.startedAt))),
+            policy: session.policy,
+            startedAt: session.startedAt,
+            endsAt: newEnd
+        )
+        if let remaining = remainingDuration(until: newEnd) {
+            scheduled = scheduler.schedule(after: remaining) { [weak self] in
+                Task { @MainActor in self?.stop() }
+            }
+        }
+        logger.info("Session extended: endsAt=\(newEnd)")
+    }
+
     private func replaceSession(
         mode: SessionMode,
         policy: WakePolicy,

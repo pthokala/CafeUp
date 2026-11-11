@@ -111,6 +111,14 @@ final class MenuBarViewModel {
         start(duration: .seconds(seconds))
     }
 
+    /// True while the session has a fixed end time (Minutes, Hours, Other Time/Until),
+    /// which is when the menu offers "Extend session by".
+    var isTimedSession: Bool { engine.current?.endsAt != nil }
+
+    func extendSession(by duration: Duration) {
+        engine.extend(by: duration)
+    }
+
     func startWhileAppRunning(bundleIdentifier: String) {
         guard let watcher = appLifetimeWatcher else { return }
         cancelAutoStoppers()
