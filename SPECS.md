@@ -672,7 +672,7 @@ Sources/
 │       └── SettingsView.swift          Tabbed window
 └── Resources/
     ├── Info.plist
-    ├── AppIcon.icns
+    ├── AppIcon.icon/                   Icon Composer app icon (scripts/render-app-icon.sh)
     ├── cafeup                          Bundled CLI (shell script)
     └── CafeUp.entitlements
 ```
