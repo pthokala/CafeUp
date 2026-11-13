@@ -23,9 +23,9 @@ concurrency:
 
 jobs:
   test:
-    # Same runner as release.yml: macos-15's Xcode 16 can read the pbxproj
-    # objectVersion that xcodegen produces; macos-14's Xcode 15.4 cannot.
-    runs-on: macos-15
+    # Same runner as release.yml: macos-26's Xcode 26 compiles the Icon
+    # Composer app icon and reads the pbxproj format xcodegen produces.
+    runs-on: macos-26
     timeout-minutes: 30
 
     steps:

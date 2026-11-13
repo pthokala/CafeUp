@@ -39,10 +39,11 @@ permissions:
 
 jobs:
   release:
-    # macos-15 has Xcode 16, which can read the pbxproj objectVersion that
-    # xcodegen produces on modern macOS toolchains. macos-14's Xcode 15.4
-    # rejects format 77 with "future Xcode project file format".
-    runs-on: macos-15
+    # macos-26's Xcode 26 compiles the Icon Composer app icon (AppIcon.icon);
+    # Xcode 16 on macos-15 copies it as a plain folder and the app ships with
+    # no icon. (macos-14's Xcode 15.4 can't even read the pbxproj format 77
+    # that xcodegen produces.)
+    runs-on: macos-26
     timeout-minutes: 60
 
     steps:
@@ -189,6 +190,15 @@ jobs:
           codesign --force --sign - "$APP"
           echo "ad-hoc re-sign complete:"
           codesign -dv "$APP" 2>&1 | grep -E "Identifier|Format|flags|TeamIdentifier"
+
+      - name: Verify app icon was compiled
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          APP="build/export-$VERSION/CafeUp.app"
+          for f in Assets.car AppIcon.icns; do
+            [ -f "$APP/Contents/Resources/$f" ] || { echo "::error::$f missing — AppIcon.icon was not compiled (Xcode too old?)"; exit 1; }
+          done
 
       - name: Verify codesign integrity
         env:
