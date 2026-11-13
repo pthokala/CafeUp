@@ -8,7 +8,8 @@
 #        b) --from-release <vX.Y.Z|latest>       (download from GitHub Releases)
 #        c) repo-root auto-detect → xcodebuild   (build from source)
 #   3. Validates the bundle is actually CafeUp (CFBundleIdentifier check).
-#   4. Installs to /Applications (graceful stop+quit existing first, timestamped backup).
+#   4. Installs to /Applications (graceful stop+quit existing first, then replaces it;
+#      no backup copies are kept).
 #   5. Strips Gatekeeper quarantine; runs spctl --assess (warns if ad-hoc).
 #   6. Symlinks the bundled `cafeup` CLI into $PATH.
 #   7. Ensures ~/AGENTS.md exists and contains a CafeUp entry.
@@ -465,29 +466,30 @@ quit_running_app() {
   fi
 }
 
-backup_existing_app() {
-  if [ -e "$APP_INSTALLED" ]; then
-    local stamp suffix backup
-    stamp="$(date +%Y%m%d-%H%M%S)"
-    backup="${APP_INSTALLED}.bak-${stamp}"
-    # Collision-proof: if the backup path somehow already exists (re-running
-    # within the same second is unlikely but cheap to guard against), append
-    # a counter.
-    suffix=2
-    while [ -e "$backup" ]; do
-      backup="${APP_INSTALLED}.bak-${stamp}-${suffix}"
-      suffix=$((suffix + 1))
-    done
-    info "Backing up existing install → $backup"
-    run mv "$APP_INSTALLED" "$backup"
-  fi
-}
-
 copy_app() {
+  # Copy next to the old app first, then swap, so a failed copy never leaves
+  # /Applications without CafeUp. Only one copy is kept: older versions can be
+  # reinstalled with --from-release or rebuilt from git.
+  local staging="${APP_INSTALLED}.installing"
   info "Installing → $APP_INSTALLED"
+  run rm -rf "$staging"
   # ditto preserves extended attributes (code signature, quarantine, etc.)
   # better than cp -R.
-  run ditto "$SOURCE_BUNDLE" "$APP_INSTALLED"
+  run ditto "$SOURCE_BUNDLE" "$staging"
+  run rm -rf "$APP_INSTALLED"
+  run mv "$staging" "$APP_INSTALLED"
+  remove_old_backups
+}
+
+remove_old_backups() {
+  # Earlier versions of this script left a CafeUp.app.bak-<timestamp> copy on
+  # every install.
+  local old
+  for old in "${APP_INSTALLED}".bak-*; do
+    [ -e "$old" ] || continue   # glob matched nothing
+    info "Removing old backup $old"
+    run rm -rf "$old"
+  done
 }
 
 clear_quarantine() {
@@ -530,7 +532,6 @@ verify_codesign() {
 install_app() {
   stop_running_session
   quit_running_app
-  backup_existing_app
   copy_app
   clear_quarantine
   verify_codesign
@@ -747,6 +748,7 @@ uninstall_all() {
   else
     dim "$APP_INSTALLED not present."
   fi
+  remove_old_backups
 
   # Find and remove any cafeup symlink that points into a CafeUp.app.
   # Be conservative: only remove symlinks (never a real file someone else
